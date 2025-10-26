@@ -4,6 +4,7 @@ A browser-based flasher built with Vite and [esptool-js](https://github.com/espr
 
 ## Features
 
+- Vue 3 + Vuetify interface for connecting, configuring, and flashing ESP targets.
 - Detects ESP32-class chips via Web Serial and runs the esptool handshake in the browser.
 - Displays chip metadata (type, flash info) and streaming logs from the bootloader.
 - Uploads `.bin` firmware images with optional full-chip erase and on-the-fly compression.
@@ -47,8 +48,9 @@ Deploy the contents of `dist/` to any static HTTPS host. Browsers block Web Seri
 ├─ index.html        # Vite entry point
 ├─ package.json      # Project metadata and scripts
 ├─ src/
-│  ├─ main.js        # Web Serial + esptool-js integration
-│  └─ style.css      # Basic UI styling
+│  ├─ App.vue        # Vuetify UI + Web Serial logic
+│  ├─ main.js        # Vue / Vuetify bootstrapping
+│  └─ style.css      # Global background styles
 ```
 
 ## License
