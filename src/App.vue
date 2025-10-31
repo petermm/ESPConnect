@@ -95,7 +95,7 @@
           <v-tabs v-model="activeTab" class="mb-4" color="primary" grow>
             <v-tab value="info">Device Info</v-tab>
             <v-tab value="partitions">Partitions</v-tab>
-            <v-tab value="flash">Flash Firmware</v-tab>
+            <v-tab value="flash">Firmware Tools</v-tab>
             <v-tab value="console">Serial Monitor</v-tab>
             <v-tab value="log">Session Log</v-tab>
           </v-tabs>
@@ -125,9 +125,35 @@
                 :can-flash="canFlash"
                 :flash-in-progress="flashInProgress"
                 :flash-progress="flashProgress"
+                :maintenance-busy="maintenanceBusy"
+                :register-address="registerAddress"
+                :register-value="registerValue"
+                :register-read-result="registerReadResult"
+                :register-status="registerStatus"
+                :register-status-type="registerStatusType"
+                :md5-offset="md5Offset"
+                :md5-length="md5Length"
+                :md5-result="md5Result"
+                :md5-status="md5Status"
+                :md5-status-type="md5StatusType"
+                :flash-read-offset="flashReadOffset"
+                :flash-read-length="flashReadLength"
+                :flash-read-status="flashReadStatus"
+                :flash-read-status-type="flashReadStatusType"
                 @firmware-input="handleFirmwareInput"
                 @flash="flashFirmware"
                 @apply-preset="applyOffsetPreset"
+                @update:register-address="value => (registerAddress.value = value)"
+                @update:register-value="value => (registerValue.value = value)"
+                @read-register="handleReadRegister"
+                @write-register="handleWriteRegister"
+                @update:md5-offset="value => (md5Offset.value = value)"
+                @update:md5-length="value => (md5Length.value = value)"
+                @compute-md5="handleComputeMd5"
+                @update:flash-read-offset="value => (flashReadOffset.value = value)"
+                @update:flash-read-length="value => (flashReadLength.value = value)"
+                @download-flash="handleDownloadFlash"
+                @erase-flash="handleEraseFlash"
               />
             </v-window-item>
 
@@ -625,6 +651,21 @@ const baudrateOptions = ['115200', '230400', '460800', '921600'];
 const flashOffset = ref('0x0');
 const eraseFlash = ref(false);
 const selectedPreset = ref(null);
+const maintenanceBusy = ref(false);
+const registerAddress = ref('0x0');
+const registerValue = ref('');
+const registerReadResult = ref(null);
+const registerStatus = ref(null);
+const registerStatusType = ref('info');
+const md5Offset = ref('0x0');
+const md5Length = ref('');
+const md5Result = ref(null);
+const md5Status = ref(null);
+const md5StatusType = ref('info');
+const flashReadOffset = ref('0x0');
+const flashReadLength = ref('');
+const flashReadStatus = ref(null);
+const flashReadStatusType = ref('info');
 const logBuffer = ref('');
 const monitorText = ref('');
 const monitorActive = ref(false);
@@ -1319,6 +1360,7 @@ async function disconnectTransport() {
       monitorError.value = null;
       monitorText.value = '';
       monitorAutoResetPerformed = false;
+      resetMaintenanceState();
   }
 }
 
@@ -1331,6 +1373,7 @@ async function connect() {
   busy.value = true;
   flashProgress.value = 0;
   monitorAutoResetPerformed = false;
+  resetMaintenanceState();
 
   logBuffer.value = '';
   partitionTable.value = [];
@@ -1612,6 +1655,20 @@ function parseOffset(value) {
   return parsed;
 }
 
+function parseNumericInput(value, label) {
+  if (!value || !value.toString().trim()) {
+    throw new Error(`${label} is required.`);
+  }
+  const trimmed = value.toString().trim().toLowerCase();
+  const parsed = trimmed.startsWith('0x')
+    ? Number.parseInt(trimmed, 16)
+    : Number.parseInt(trimmed, 10);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    throw new Error(`Invalid ${label.toLowerCase()} value.`);
+  }
+  return parsed;
+}
+
 async function flashFirmware() {
   if (!loader.value || !firmwareBuffer.value) {
     appendLog('Select a firmware binary and connect to a device first.', '[warn]');
@@ -1660,6 +1717,175 @@ async function flashFirmware() {
     flashProgress.value = 0;
     flashInProgress.value = false;
     busy.value = false;
+  }
+}
+
+function resetMaintenanceState() {
+  maintenanceBusy.value = false;
+  registerStatus.value = null;
+  registerStatusType.value = 'info';
+  registerReadResult.value = null;
+  registerValue.value = '';
+  md5Result.value = null;
+  md5Status.value = null;
+  md5StatusType.value = 'info';
+  flashReadStatus.value = null;
+  flashReadStatusType.value = 'info';
+}
+
+async function handleReadRegister() {
+  if (!loader.value) {
+    registerStatus.value = 'Connect to a device first.';
+    registerStatusType.value = 'warning';
+    return;
+  }
+  try {
+    maintenanceBusy.value = true;
+    registerStatus.value = null;
+    const address = parseNumericInput(registerAddress.value, 'Register address');
+    const value = await loader.value.readReg(address);
+    registerReadResult.value = `0x${value.toString(16).toUpperCase().padStart(8, '0')}`;
+    registerStatusType.value = 'success';
+    registerStatus.value = `Read 0x${address.toString(16).toUpperCase()} = ${registerReadResult.value}`;
+  } catch (error) {
+    registerStatusType.value = 'error';
+    registerStatus.value = `Read failed: ${error?.message || error}`;
+  } finally {
+    maintenanceBusy.value = false;
+  }
+}
+
+async function handleWriteRegister() {
+  if (!loader.value) {
+    registerStatus.value = 'Connect to a device first.';
+    registerStatusType.value = 'warning';
+    return;
+  }
+  try {
+    maintenanceBusy.value = true;
+    registerStatus.value = null;
+    const address = parseNumericInput(registerAddress.value, 'Register address');
+    const value = parseNumericInput(registerValue.value, 'Register value');
+    await loader.value.writeReg(address, value);
+    registerReadResult.value = `0x${value.toString(16).toUpperCase().padStart(8, '0')}`;
+    registerStatusType.value = 'success';
+    registerStatus.value = `Wrote ${registerReadResult.value} to 0x${address
+      .toString(16)
+      .toUpperCase()}.`;
+    appendLog(
+      `Register write completed at 0x${address.toString(16).toUpperCase()} = ${registerReadResult.value}.`,
+      '[debug]'
+    );
+  } catch (error) {
+    registerStatusType.value = 'error';
+    registerStatus.value = `Write failed: ${error?.message || error}`;
+  } finally {
+    maintenanceBusy.value = false;
+  }
+}
+
+async function handleComputeMd5() {
+  if (!loader.value) {
+    md5Status.value = 'Connect to a device first.';
+    md5StatusType.value = 'warning';
+    md5Result.value = null;
+    return;
+  }
+  try {
+    maintenanceBusy.value = true;
+    md5Status.value = null;
+    md5Result.value = null;
+    const offset = parseNumericInput(md5Offset.value, 'MD5 offset');
+    const length = parseNumericInput(md5Length.value, 'MD5 length');
+    if (length <= 0) {
+      throw new Error('MD5 length must be greater than zero.');
+    }
+    md5StatusType.value = 'info';
+    md5Status.value = 'Calculating MD5 checksum...';
+    const result = await loader.value.flashMd5sum(offset, length);
+    md5Status.value = null;
+    md5Result.value = result;
+    appendLog(
+      `Computed MD5 for 0x${offset.toString(16).toUpperCase()} (${length} bytes): ${result}`,
+      '[debug]'
+    );
+  } catch (error) {
+    md5StatusType.value = 'error';
+    md5Status.value = `MD5 calculation failed: ${error?.message || error}`;
+    md5Result.value = null;
+  } finally {
+    maintenanceBusy.value = false;
+  }
+}
+
+async function handleDownloadFlash() {
+  if (!loader.value) {
+    flashReadStatus.value = 'Connect to a device first.';
+    flashReadStatusType.value = 'warning';
+    return;
+  }
+  try {
+    maintenanceBusy.value = true;
+    flashReadStatusType.value = 'info';
+    flashReadStatus.value = 'Preparing download...';
+    const offset = parseNumericInput(flashReadOffset.value, 'Flash offset');
+    const length = parseNumericInput(flashReadLength.value, 'Flash length');
+    if (length <= 0) {
+      throw new Error('Flash length must be greater than zero.');
+    }
+    const buffer = await loader.value.readFlash(offset, length, (_packet, received, total) => {
+      flashReadStatusType.value = 'info';
+      flashReadStatus.value = `Downloading ${received.toLocaleString()} of ${total.toLocaleString()} bytes...`;
+    });
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+    const fileName = `esp32_flash_0x${offset.toString(16).toUpperCase()}_${length
+      .toString(16)
+      .toUpperCase()}.bin`;
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    flashReadStatusType.value = 'success';
+    flashReadStatus.value = `Downloaded ${length.toLocaleString()} bytes starting at 0x${offset
+      .toString(16)
+      .toUpperCase()}.`;
+    appendLog(`Downloaded flash region ${fileName}.`, '[debug]');
+  } catch (error) {
+    flashReadStatusType.value = 'error';
+    flashReadStatus.value = `Download failed: ${error?.message || error}`;
+  } finally {
+    maintenanceBusy.value = false;
+  }
+}
+
+async function handleEraseFlash(payload = { mode: 'full' }) {
+  if (!loader.value) {
+    flashReadStatus.value = 'Connect to a device first.';
+    flashReadStatusType.value = 'warning';
+    return;
+  }
+  if (payload?.mode !== 'full') {
+    flashReadStatusType.value = 'warning';
+    flashReadStatus.value = 'Selective erase is not yet supported in this interface.';
+    return;
+  }
+  try {
+    maintenanceBusy.value = true;
+    flashReadStatusType.value = 'info';
+    flashReadStatus.value = 'Erasing entire flash...';
+    await loader.value.eraseFlash();
+    flashReadStatusType.value = 'success';
+    flashReadStatus.value = 'Flash erase complete.';
+    appendLog('Entire flash erased.', '[debug]');
+  } catch (error) {
+    flashReadStatusType.value = 'error';
+    flashReadStatus.value = `Erase failed: ${error?.message || error}`;
+  } finally {
+    maintenanceBusy.value = false;
   }
 }
 
