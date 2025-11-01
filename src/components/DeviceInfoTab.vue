@@ -144,7 +144,7 @@
   </v-expand-transition>
   <v-expand-transition v-else>
     <div class="device-info-empty">
-      <v-card class="device-empty-card" variant="tonal">
+      <v-card class="device-empty-card device-empty-card--disconnected" variant="tonal">
         <v-card-text class="device-empty-card__body">
           <v-avatar class="device-empty-card__avatar" size="70">
             <v-icon size="34">mdi-usb-port</v-icon>
@@ -303,6 +303,12 @@ const featurePreview = computed(() => {
   max-width: 420px;
 }
 
+.device-empty-card--disconnected {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--v-theme-error) 40%, transparent);
+  background: color-mix(in srgb, var(--v-theme-error) 14%, var(--v-theme-surface) 92%);
+}
+
 .device-empty-card__body {
   display: flex;
   flex-direction: column;
@@ -313,6 +319,11 @@ const featurePreview = computed(() => {
 .device-empty-card__avatar {
   background: color-mix(in srgb, var(--v-theme-primary) 18%, transparent);
   color: color-mix(in srgb, var(--v-theme-primary) 80%, var(--v-theme-on-surface) 30%);
+}
+
+.device-empty-card--disconnected .device-empty-card__avatar {
+  background: color-mix(in srgb, var(--v-theme-error) 26%, transparent);
+  color: color-mix(in srgb, var(--v-theme-error) 85%, var(--v-theme-on-surface) 10%);
 }
 
 .device-empty-card__title {

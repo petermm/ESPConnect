@@ -1,6 +1,6 @@
 <template>
   <div v-if="!partitionSegments.length" class="partitions-empty">
-    <v-card class="partitions-empty__card" variant="tonal">
+    <v-card class="partitions-empty__card partitions-empty__card--disconnected" variant="tonal">
       <v-card-text class="partitions-empty__body">
         <v-avatar class="partitions-empty__avatar" size="70">
           <v-icon size="34">mdi-table-refresh</v-icon>
@@ -180,6 +180,12 @@ const unusedBytesDisplay = computed(() =>
   max-width: 420px;
 }
 
+.partitions-empty__card--disconnected {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--v-theme-error) 40%, transparent);
+  background: color-mix(in srgb, var(--v-theme-error) 14%, var(--v-theme-surface) 92%);
+}
+
 .partitions-empty__body {
   display: flex;
   flex-direction: column;
@@ -190,6 +196,11 @@ const unusedBytesDisplay = computed(() =>
 .partitions-empty__avatar {
   background: color-mix(in srgb, var(--v-theme-primary) 18%, transparent);
   color: color-mix(in srgb, var(--v-theme-primary) 80%, var(--v-theme-on-surface) 30%);
+}
+
+.partitions-empty__card--disconnected .partitions-empty__avatar {
+  background: color-mix(in srgb, var(--v-theme-error) 26%, transparent);
+  color: color-mix(in srgb, var(--v-theme-error) 85%, var(--v-theme-on-surface) 10%);
 }
 
 .partitions-empty__title {
