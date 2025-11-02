@@ -46,7 +46,7 @@
                     <v-icon size="40" class="me-2">mdi-lightning-bolt-outline</v-icon>
                     Feature Set
                   </div>
-                  <div class="summary-value">
+                  <div class="summary-value ml-2">
                     {{ hasFeatures ? `${details.features.length} capabilities` : 'No features reported' }}
                   </div>
 
