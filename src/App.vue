@@ -10,7 +10,8 @@
           Sections
         </v-list-subheader>
         <v-list-item v-for="item in navigationItems" :key="item.value" :value="item.value" :prepend-icon="item.icon"
-          :active="activeTab === item.value" class="app-drawer__list-item" rounded="lg" @click="activeTab = item.value">
+          :active="activeTab === item.value" :disabled="item.disabled" class="app-drawer__list-item" rounded="lg"
+          @click="!item.disabled && (activeTab = item.value)">
           <v-list-item-title>{{ item.title }}</v-list-item-title>
         </v-list-item>
       </v-list>
@@ -88,8 +89,8 @@
                 :flash-read-offset="flashReadOffset" :flash-read-length="flashReadLength"
                 :flash-read-status="flashReadStatus" :flash-read-status-type="flashReadStatusType"
                 :partition-options="partitionDownloadOptions" :selected-partition="selectedPartitionDownload"
-                :integrity-partition="integrityPartition" :spiffs-agent-status="spiffsAgent"
-                :download-progress="downloadProgress" @firmware-input="handleFirmwareInput" @flash="flashFirmware"
+                :integrity-partition="integrityPartition" :download-progress="downloadProgress"
+                @firmware-input="handleFirmwareInput" @flash="flashFirmware"
                 @apply-preset="applyOffsetPreset" @update:register-address="value => (registerAddress.value = value)"
                 @update:register-value="value => (registerValue.value = value)" @read-register="handleReadRegister"
                 @write-register="handleWriteRegister" @update:md5-offset="value => (md5Offset.value = value)"
@@ -97,15 +98,20 @@
                 @update:flash-read-offset="value => (flashReadOffset.value = value)"
                 @update:flash-read-length="value => (flashReadLength.value = value)"
                 @update:selected-partition="handleSelectPartition"
-                @update:integrity-partition="handleSelectIntegrityPartition" @load-spiffs-agent="handleLoadSpiffsAgent"
-                @deploy-spiffs-agent="handleDeploySpiffsAgent" @spiffs-list="handleListSpiffsFiles"
-                @spiffs-delete="handleDeleteSpiffsFile" @spiffs-upload="handleUploadSpiffsFile"
-                @spiffs-download="handleDownloadSpiffsFile" @spiffs-format="handleFormatSpiffsAgent"
-                @spiffs-reset="handleResetSpiffsAgent" @download-flash="handleDownloadFlash"
+                @update:integrity-partition="handleSelectIntegrityPartition" @download-flash="handleDownloadFlash"
                 @download-partition="handleDownloadPartition" @download-all-partitions="handleDownloadAllPartitions"
                 @download-used-flash="handleDownloadUsedFlash" @cancel-flash="handleCancelFlash"
                 @erase-flash="handleEraseFlash" @cancel-download="handleCancelDownload"
                 @select-register="handleSelectRegister" />
+            </v-window-item>
+
+            <v-window-item value="spiffs">
+              <SpiffsAgentTab :busy="busy" :maintenance-busy="maintenanceBusy" :spiffs-agent-status="spiffsAgent"
+                :available="hasSpiffsPartition" @load-spiffs-agent="handleLoadSpiffsAgent"
+                @deploy-spiffs-agent="handleDeploySpiffsAgent" @spiffs-list="handleListSpiffsFiles"
+                @spiffs-delete="handleDeleteSpiffsFile" @spiffs-upload="handleUploadSpiffsFile"
+                @spiffs-download="handleDownloadSpiffsFile" @spiffs-format="handleFormatSpiffsAgent"
+                @spiffs-reset="handleResetSpiffsAgent" />
             </v-window-item>
 
             <v-window-item value="console">
@@ -187,6 +193,7 @@ import { ESPLoader, Transport } from 'esptool-js';
 import { useTheme } from 'vuetify';
 import DeviceInfoTab from './components/DeviceInfoTab.vue';
 import FlashFirmwareTab from './components/FlashFirmwareTab.vue';
+import SpiffsAgentTab from './components/SpiffsAgentTab.vue';
 import PartitionsTab from './components/PartitionsTab.vue';
 import SessionLogTab from './components/SessionLogTab.vue';
 import SerialMonitorTab from './components/SerialMonitorTab.vue';
@@ -752,13 +759,35 @@ const firmwareName = ref('');
 const chipDetails = ref(null);
 const partitionTable = ref([]);
 const activeTab = ref('info');
-const navigationItems = [
-  { title: 'Device Info', value: 'info', icon: 'mdi-information-outline' },
-  { title: 'Partitions', value: 'partitions', icon: 'mdi-table' },
-  { title: 'Firmware Tools', value: 'flash', icon: 'mdi-chip' },
-  { title: 'Serial Monitor', value: 'console', icon: 'mdi-console-line' },
-  { title: 'Session Log', value: 'log', icon: 'mdi-clipboard-text-outline' },
-];
+const hasSpiffsPartition = computed(() =>
+  partitionTable.value.some(
+    entry =>
+      entry &&
+      typeof entry.type === 'number' &&
+      typeof entry.subtype === 'number' &&
+      entry.type === 0x01 &&
+      entry.subtype === 0x82,
+  ),
+);
+const navigationItems = computed(() => [
+  { title: 'Device Info', value: 'info', icon: 'mdi-information-outline', disabled: false },
+  { title: 'Partitions', value: 'partitions', icon: 'mdi-table', disabled: false },
+  { title: 'Firmware Tools', value: 'flash', icon: 'mdi-chip', disabled: false },
+  {
+    title: 'SPIFFS Agent',
+    value: 'spiffs',
+    icon: 'mdi-folder-wrench',
+    disabled: !hasSpiffsPartition.value,
+  },
+  { title: 'Serial Monitor', value: 'console', icon: 'mdi-console-line', disabled: false },
+  { title: 'Session Log', value: 'log', icon: 'mdi-clipboard-text-outline', disabled: false },
+]);
+
+watch(hasSpiffsPartition, available => {
+  if (!available && activeTab.value === 'spiffs') {
+    activeTab.value = 'flash';
+  }
+});
 const resourceLinks = [
   {
     title: 'Tutorial',
