@@ -169,58 +169,56 @@
         >
           No files detected. Upload or restore a SPIFFS image to begin.
         </v-alert>
-        <v-table
+        <v-data-table
           v-else
+          :headers="fileTableHeaders"
+          :items="files"
+          item-key="name"
+          :items-per-page="-1"
+          hide-default-footer
           density="comfortable"
           class="spiffs-table mt-4"
         >
-          <thead>
-            <tr>
-              <th class="text-start">Name</th>
-              <th class="text-start">Size</th>
-              <th class="text-start">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="file in files" :key="file.name">
-              <td><code>{{ file.name }}</code></td>
-              <td>{{ formatSize(file.size) }}</td>
-              <td>
-              <v-btn
-                size="small"
-                variant="text"
-                color="info"
-                v-if="isViewable(file.name)"
-                :disabled="loading || busy || saving || readOnly"
-                @click="emit('view-file', file.name)"
-              >
-                <v-icon start size="16">{{ previewIcon(file.name) }}</v-icon>
-                {{ previewLabel(file.name) }}
-              </v-btn>
-              <v-btn
-                size="small"
-                variant="text"
-                color="primary"
-                :disabled="loading || busy || saving || readOnly"
-                @click="emit('download-file', file.name)"
-              >
-                <v-icon start size="16">mdi-download</v-icon>
-                  Download
-                </v-btn>
-                <v-btn
-                  size="small"
-                  variant="text"
-                  color="error"
-                  :disabled="readOnly || loading || busy || saving"
-                  @click="emit('delete-file', file.name)"
-                >
-                  <v-icon start size="16">mdi-delete</v-icon>
-                  Delete
-                </v-btn>
-              </td>
-            </tr>
-          </tbody>
-        </v-table>
+          <template #item.name="{ item }">
+            <code>{{ unwrapItem(item).name }}</code>
+          </template>
+          <template #item.size="{ item }">
+            {{ formatSize(unwrapItem(item).size) }}
+          </template>
+          <template #item.actions="{ item }">
+            <v-btn
+              size="small"
+              variant="text"
+              color="info"
+              v-if="isViewable(unwrapItem(item).name)"
+              :disabled="loading || busy || saving || readOnly"
+              @click="emit('view-file', unwrapItem(item).name)"
+            >
+              <v-icon start size="16">{{ previewIcon(unwrapItem(item).name) }}</v-icon>
+              {{ previewLabel(unwrapItem(item).name) }}
+            </v-btn>
+            <v-btn
+              size="small"
+              variant="text"
+              color="primary"
+              :disabled="loading || busy || saving || readOnly"
+              @click="emit('download-file', unwrapItem(item).name)"
+            >
+              <v-icon start size="16">mdi-download</v-icon>
+              Download
+            </v-btn>
+            <v-btn
+              size="small"
+              variant="text"
+              color="error"
+              :disabled="readOnly || loading || busy || saving"
+              @click="emit('delete-file', unwrapItem(item).name)"
+            >
+              <v-icon start size="16">mdi-delete</v-icon>
+              Delete
+            </v-btn>
+          </template>
+        </v-data-table>
       </v-card-text>
     </v-card>
 
@@ -296,6 +294,12 @@ const props = defineProps({
     default: null,
   },
 });
+
+const fileTableHeaders = Object.freeze([
+  { title: 'Name', key: 'name', sortable: true, align: 'start' },
+  { title: 'Size', key: 'size', sortable: true, align: 'start' },
+  { title: 'Actions', key: 'actions', sortable: false, align: 'start' },
+]);
 
 const emit = defineEmits([
   'select-partition',
@@ -410,6 +414,16 @@ function formatSize(size) {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function unwrapItem(item) {
+  if (!item || typeof item !== 'object') {
+    return {};
+  }
+  if ('raw' in item && item.raw && typeof item.raw === 'object') {
+    return item.raw;
+  }
+  return item;
 }
 
 function toPreviewInfo(value) {
