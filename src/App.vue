@@ -95,6 +95,12 @@
                 subtitle="Connect to an ESP32 to browse and edit SPIFFS files." />
             </v-window-item>
 
+            <v-window-item value="littlefs">
+              <LittleFsPreview v-if="connected && littleFsAvailable" />
+              <DisconnectedState v-else icon="mdi-alpha-l-circle-outline" :min-height="420"
+                subtitle="Connect to an ESP32 with a LittleFS partition to use these tools." />
+            </v-window-item>
+
             <v-window-item value="apps">
               <AppsTab v-if="connected" :apps="appPartitions" :active-slot-id="activeAppSlotId"
                 :active-summary="appActiveSummary" :loading="appMetadataLoading" :error="appMetadataError" />
@@ -350,6 +356,7 @@ import DeviceInfoTab from './components/DeviceInfoTab.vue';
 import FlashFirmwareTab from './components/FlashFirmwareTab.vue';
 import AppsTab from './components/AppsTab.vue';
 import SpiffsManagerTab from './components/SpiffsManagerTab.vue';
+import LittleFsPreview from './components/LittleFsPreview.vue';
 import PartitionsTab from './components/PartitionsTab.vue';
 import SessionLogTab from './components/SessionLogTab.vue';
 import SerialMonitorTab from './components/SerialMonitorTab.vue';
@@ -1592,6 +1599,28 @@ const spiffsSelectedPartition = computed(() =>
   spiffsPartitions.value.find(partition => partition.id === spiffsState.selectedId) ?? null,
 );
 const hasSpiffsPartitionSelected = computed(() => Boolean(spiffsSelectedPartition.value));
+
+const littleFsPartitions = computed(() =>
+  partitionTable.value
+    .filter(entry => {
+      if (!entry || typeof entry.type !== 'number' || typeof entry.subtype !== 'number') {
+        return false;
+      }
+      if (entry.type !== 0x01) {
+        return false;
+      }
+      const label = entry.label?.toLowerCase().trim() || '';
+      return entry.subtype === 0x83 || label.includes('littlefs');
+    })
+    .map(entry => ({
+      id: entry.offset,
+      label: entry.label?.trim() || 'LittleFS',
+      offset: entry.offset,
+      size: entry.size,
+      sizeText: formatBytes(entry.size) ?? `${entry.size} bytes`,
+    })),
+);
+const littleFsAvailable = computed(() => littleFsPartitions.value.length > 0);
 const logBuffer = ref('');
 const monitorText = ref('');
 const monitorActive = ref(false);
@@ -1632,6 +1661,12 @@ const navigationItems = computed(() => [
     value: 'spiffs',
     icon: 'mdi-folder-wrench',
     disabled: !connected.value || !spiffsAvailable.value,
+  },
+  {
+    title: 'LittleFS Tools',
+    value: 'littlefs',
+    icon: 'mdi-alpha-l-circle-outline',
+    disabled: !connected.value || !littleFsAvailable.value,
   },
   { title: 'Firmware Tools', value: 'flash', icon: 'mdi-chip', disabled: false },
   { title: 'Serial Monitor', value: 'console', icon: 'mdi-console-line', disabled: false },
