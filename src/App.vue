@@ -66,6 +66,9 @@
           <v-alert v-if="!serialSupported" type="error" class="mb-4" variant="tonal" icon="mdi-alert-circle-outline">
             This browser does not support the Web Serial API. Use Chrome, Edge, or another Chromium-based browser.
           </v-alert>
+          <v-alert v-else-if="showSerialMonitorReconnectNotice" type="info" class="mb-4" variant="tonal" icon="mdi-console-line">
+            Serial monitor closed — click Connect to re-enter maintenance mode.
+          </v-alert>
           <v-window v-model="activeTab" class="app-tab-content">
             <v-window-item value="info">
               <DeviceInfoTab :chip-details="chipDetails" />
@@ -183,7 +186,7 @@
             <v-window-item value="console">
               <SerialMonitorTab :monitor-text="monitorText" :monitor-active="monitorActive"
                 :monitor-error="monitorError" :can-start="canStartMonitor" :can-command="canIssueMonitorCommands"
-                @start-monitor="startMonitor" @stop-monitor="stopMonitor" @clear-monitor="clearMonitorOutput"
+                @start-monitor="startMonitor" @stop-monitor="stopMonitor({ closeConnection: true })" @clear-monitor="clearMonitorOutput"
                 @reset-board="resetBoard" />
             </v-window-item>
 
@@ -3430,6 +3433,7 @@ const monitorText = ref('');
 const monitorActive = ref(false);
 const monitorError = ref(null);
 const monitorAbortController = ref(null);
+const serialMonitorClosedPrompt = ref(false);
 const MONITOR_BUFFER_LIMIT = 20000;
 let monitorPendingText = '';
 let monitorFlushHandle = null;
@@ -4593,6 +4597,10 @@ const canFlash = computed(
     !flashInProgress.value
 );
 
+const showSerialMonitorReconnectNotice = computed(
+  () => serialMonitorClosedPrompt.value && !connected.value && serialSupported
+);
+
 function appendLog(message, prefix = '[ui]') {
   const line = prefix ? `${prefix} ${message}` : message;
   logBuffer.value += `${line}\n`;
@@ -4855,8 +4863,9 @@ async function startMonitor() {
   })();
 }
 
-async function stopMonitor() {
+async function stopMonitor(options = {}) {
   if (!monitorActive.value) return;
+  const { closeConnection = false } = options;
   monitorAbortController.value?.abort();
   await releaseTransportReader();
   monitorActive.value = false;
@@ -4884,6 +4893,10 @@ async function stopMonitor() {
         '[warn]'
       );
     }
+  }
+  if (closeConnection) {
+    await disconnectTransport();
+    serialMonitorClosedPrompt.value = true;
   }
 }
 
@@ -4935,6 +4948,7 @@ async function disconnectTransport() {
     monitorError.value = null;
     monitorText.value = '';
     monitorAutoResetPerformed = false;
+    serialMonitorClosedPrompt.value = false;
     resetMaintenanceState();
     resetSpiffsState();
     spiffsState.selectedId = null;
@@ -4957,6 +4971,7 @@ async function connect() {
   busy.value = true;
   flashProgress.value = 0;
   monitorAutoResetPerformed = false;
+  serialMonitorClosedPrompt.value = false;
   resetMaintenanceState();
 
   logBuffer.value = '';
