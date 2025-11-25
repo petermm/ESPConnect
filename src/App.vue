@@ -5005,7 +5005,7 @@ async function connect() {
     currentBaud.value = connectBaud;
     transport.value.baudrate = connectBaud;
 
-    const chipName = await loader.value.main('default_reset');
+    const chipName = await loader.value.main();
     const chip = loader.value.chip;
     connected.value = true;
     appendLog(`Handshake complete with ${chipName}. Collecting device details...`, '[debug]');
@@ -5065,7 +5065,23 @@ async function connect() {
     const featuresRaw = await callChip('getChipFeatures');
     const crystalFreq = await callChip('getCrystalFreq');
     const macAddress = await callChip('readMac');
-    const flashSizeRaw = await loader.value.getFlashSize().catch(() => undefined);
+
+    let flashSizeRaw = undefined;
+    try {
+      if (typeof loader.value.detectFlashSize === 'function') {
+        flashSizeRaw = await loader.value.detectFlashSize();
+        appendLog(
+          `Chip detectFlashSize: ${flashSizeRaw === undefined ? 'undefined' : JSON.stringify(flashSizeRaw)}`,
+          '[debug]'
+        );
+      } else if (typeof loader.value.getFlashSize === 'function') {
+        flashSizeRaw = await loader.value.getFlashSize();
+      }
+    } catch (err) {
+      appendLog(`Unable to retrieve flash size: ${err?.message || err}`, '[warn]');
+      flashSizeRaw = undefined;
+    }
+
     const packageVersion = await callChip('getPkgVersion');
     const chipRevision = await callChip('getChipRevision');
     const majorVersion = await callChip('getMajorChipVersion');
