@@ -566,6 +566,7 @@ import registerGuides from './data/register-guides.json';
 import { InMemorySpiffsClient } from './utils/spiffs/spiffsClient';
 import { createConnection, requestSerialPort } from './services/connectionService';
 import { useFatfsManager, useLittlefsManager, useSpiffsManager } from './composables/useFilesystemManagers';
+import { useDialogs } from './composables/useDialogs';
 import { readPartitionTable } from './utils/partitions';
 
 const APP_VERSION = '1.03';
@@ -3197,18 +3198,8 @@ const appMetadataError = ref(null);
 const activeAppSlotId = ref(null);
 const appActiveSummary = ref('Active slot unknown.');
 const appMetadataLoaded = ref(false);
-const connectDialog = reactive({
-  visible: false,
-  label: 'Connecting...',
-  message: '',
-});
+const { connectDialog, toast } = useDialogs();
 let connectDialogTimer = null;
-const toast = reactive({
-  visible: false,
-  message: '',
-  color: 'warning',
-  timeout: 4000,
-});
 const spiffsPartitions = computed(() =>
   partitionTable.value
     .filter(
