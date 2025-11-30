@@ -695,11 +695,19 @@ function normalizeLittlefsEntries(entries) {
     return [];
   }
   return entries
-    .map(entry => ({
-      name: entry?.name ?? entry?.path ?? '',
-      size: Number(entry?.size ?? 0) || 0,
-    }))
-    .filter(file => file.name);
+    .map(entry => {
+      const rawName = (entry?.name ?? entry?.path ?? '').toString();
+      const name = rawName.replace(/^\/+/, '');
+      const isDir = entry?.isDirectory === true || entry?.type === 'dir';
+      if (!name || isDir || name.includes('/')) {
+        return null; // ignore root entry and nested paths to keep flat view
+      }
+      return {
+        name,
+        size: Number(entry?.size ?? 0) || 0,
+      };
+    })
+    .filter(Boolean);
 }
 
 function isLittlefsUnformattedError(error) {
