@@ -473,7 +473,7 @@ async function processDroppedItems(items, fallbackFiles = []) {
       entryMap.set(file.name, { file, path: file.name });
       filesForSizeCheck.push({ size: file.size, path: file.name });
     }
-  } else {
+  } else if (!sawDirectory) {
     for (const file of fallbackFiles) {
       if (!entryMap.has(file.name)) {
         entryMap.set(file.name, { file, path: file.name });
