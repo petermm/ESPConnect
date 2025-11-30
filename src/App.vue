@@ -630,6 +630,7 @@ import { PACKAGE_LABELS, ECO_LABELS, EMBEDDED_FLASH_CAPACITY, EMBEDDED_PSRAM_CAP
 import { JEDEC_FLASH_PARTS, JEDEC_MANUFACTURERS, VENDOR_ALIASES } from './constants/flashIds';
 import { USB_PRODUCT_NAMES, USB_VENDOR_NAMES } from './constants/usb';
 import { FACT_DISPLAY_ORDER, FACT_GROUP_CONFIG, FACT_ICONS } from './constants/deviceFacts';
+import { PWM_TABLE } from './utils/pwm-capabilities-table';
 
 let littlefsModulePromise = null;
 let fatfsModulePromise = null;
@@ -1884,6 +1885,19 @@ function formatBytes(bytes) {
     idx += 1;
   }
   const formatted = value % 1 === 0 ? value.toFixed(0) : value.toFixed(1);
+  return `${formatted} ${units[idx]}`;
+}
+
+function formatHertz(value) {
+  if (!Number.isFinite(value) || value <= 0) return null;
+  const units = ['Hz', 'kHz', 'MHz'];
+  let idx = 0;
+  let v = value;
+  while (v >= 1000 && idx < units.length - 1) {
+    v /= 1000;
+    idx += 1;
+  }
+  const formatted = v % 1 === 0 ? v.toFixed(0) : v.toFixed(v < 10 ? 2 : 1);
   return `${formatted} ${units[idx]}`;
 }
 
@@ -4770,6 +4784,25 @@ async function connect() {
 
     const coreCount = extractCoreCount(featureList);
     pushFact('CPU Cores', coreCount);
+
+    const pwmEntry = chipKey ? PWM_TABLE[chipKey] : null;
+    if (pwmEntry) {
+      let pwmLabel = '';
+      if (pwmEntry.hasLedc === false) {
+        pwmLabel = pwmEntry.notes || 'Software PWM only';
+      } else {
+        const parts = [];
+        if (pwmEntry.ledcChannels) parts.push(`${pwmEntry.ledcChannels} channels`);
+        if (pwmEntry.ledcTimers) parts.push(`${pwmEntry.ledcTimers} timers`);
+        if (pwmEntry.hasHighSpeedMode) parts.push('high-speed');
+        if (pwmEntry.maxFreqHz1Bit) {
+          const freq = formatHertz(pwmEntry.maxFreqHz1Bit);
+          if (freq) parts.push(`up to ${freq}`);
+        }
+        pwmLabel = parts.join(' · ');
+      }
+      pushFact('PWM/LEDC', pwmLabel);
+    }
 
     if (flashVendor && !embeddedFlash) {
       pushFact('Flash Vendor (eFuse)', formatVendorLabel(flashVendor));

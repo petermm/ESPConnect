@@ -12,6 +12,7 @@ export const FACT_ICONS: Record<string, string> = {
   'USB Bridge': 'mdi-usb-port',
   'Connection Baud': 'mdi-speedometer',
   'eFuse Block Version': 'mdi-shield-key',
+  'PWM/LEDC': 'mdi-waveform',
 };
 
 export const FACT_DISPLAY_ORDER = [
@@ -26,6 +27,7 @@ export const FACT_DISPLAY_ORDER = [
   'Flash Vendor (eFuse)',
   'PSRAM Vendor (eFuse)',
   'eFuse Block Version',
+  'PWM/LEDC',
   'USB Bridge',
   'Connection Baud',
 ];
@@ -53,6 +55,11 @@ export const FACT_GROUP_CONFIG = [
     title: 'Security',
     icon: 'mdi-shield-key-outline',
     labels: ['eFuse Block Version'],
+  },
+  {
+    title: 'Peripherals',
+    icon: 'mdi-waveform',
+    labels: ['PWM/LEDC'],
   },
   {
     title: 'Connection',
