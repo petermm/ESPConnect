@@ -41,6 +41,16 @@
             Stop
           </v-btn>
           <v-btn
+            color="primary"
+            variant="text"
+            size="small"
+            :prepend-icon="paused ? 'mdi-play-circle' : 'mdi-pause-circle'"
+            :disabled="!monitorActive"
+            @click="togglePause"
+          >
+            {{ paused ? 'Resume' : 'Pause' }}
+          </v-btn>
+          <v-btn
             color="secondary"
             variant="text"
             size="small"
@@ -141,10 +151,22 @@ const emit = defineEmits(['start-monitor', 'stop-monitor', 'clear-monitor', 'res
 
 const terminalEl = ref(null);
 const filterText = ref('');
+const paused = ref(false);
+const pausedSnapshot = ref('');
+const togglePause = () => {
+  if (!paused.value) {
+    pausedSnapshot.value = props.monitorText;
+    paused.value = true;
+  } else {
+    pausedSnapshot.value = '';
+    paused.value = false;
+  }
+};
+const sourceText = computed(() => (paused.value ? pausedSnapshot.value : props.monitorText));
 const displayText = computed(() => {
-  if (!filterText.value?.trim()) return props.monitorText;
+  if (!filterText.value?.trim()) return sourceText.value;
   const needle = filterText.value.toLowerCase();
-  return props.monitorText
+  return sourceText.value
     .split(/\r?\n/)
     .filter(line => line.toLowerCase().includes(needle))
     .join('\n');
@@ -154,6 +176,12 @@ const hasMonitorOutput = computed(() => Boolean(displayText.value && displayText
 watch(
   () => props.monitorText,
   async () => {
+    if (paused.value) {
+      if (!props.monitorText) {
+        pausedSnapshot.value = '';
+      }
+      return;
+    }
     await nextTick();
     const target =
       terminalEl.value && '$el' in terminalEl.value ? terminalEl.value.$el : terminalEl.value;
@@ -166,7 +194,12 @@ watch(
 watch(
   () => props.monitorActive,
   async active => {
-    if (!active) return;
+    if (!active) {
+      paused.value = false;
+      pausedSnapshot.value = '';
+      return;
+    }
+    if (paused.value) return;
     await nextTick();
     const target =
       terminalEl.value && '$el' in terminalEl.value ? terminalEl.value.$el : terminalEl.value;
