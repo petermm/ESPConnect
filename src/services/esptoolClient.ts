@@ -1,5 +1,6 @@
 import { ESPLoader } from 'tasmota-webserial-esptool';
 import type { Logger } from 'tasmota-webserial-esptool/dist/const.js';
+import type {} from '../types/web-serial';
 import {
   CHIP_FAMILY_ESP32S3,
   CHIP_FAMILY_ESP32S2,
