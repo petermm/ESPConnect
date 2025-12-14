@@ -162,29 +162,6 @@ class CompatibleTransport {
     }
     this.reader = this.virtualReader;
   }
-
-  async *rawRead() {
-    // Stream raw bytes from the loader's shared input buffer without fighting the bootloader reader lock.
-    while (true) {
-      const loader = this.getLoader();
-      if (!loader) {
-        break;
-      }
-      if (this.isBusy()) {
-        await sleep(25);
-        continue;
-      }
-      const buffer = getInputBuffer(loader);
-      if (buffer && buffer.length > 0) {
-        const chunk = new Uint8Array(buffer.splice(0));
-        if (chunk.length > 0) {
-          yield chunk;
-          continue;
-        }
-      }
-      await sleep(30);
-    }
-  }
 }
 
 function createLogger(terminal: any, debugLogging: boolean): Logger {
