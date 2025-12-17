@@ -80,7 +80,6 @@ export type CompatibleLoader = ESPLoader & {
   readReg: (addr: number) => Promise<number>;
   writeReg: (addr: number, value: number, mask?: number, delayUs?: number) => Promise<void>;
   flashMd5sum: (addr: number, size: number) => Promise<string>;
-  after: (mode?: string) => Promise<void>;
   eraseFlash?: () => Promise<void>;
 };
 
@@ -233,15 +232,6 @@ function decorateLoader(loader: ESPLoader, setBusy: BusySetter): CompatibleLoade
   if (baseEraseFlash) {
     (decorated as any).eraseFlash = async () => runBusy(() => baseEraseFlash());
   }
-
-  decorated.after = async (mode = 'hard_reset') =>
-    runBusy(async () => {
-      if (mode === 'hard_reset') {
-        await loader.hardReset(false);
-      } else if (mode === 'soft_reset') {
-        await loader.memFinish?.(0);
-      }
-    });
 
   return decorated;
 }

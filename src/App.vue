@@ -5626,7 +5626,7 @@ async function flashFirmware() {
       true
     );
 
-    await loader.value.after('hard_reset');
+    await loader.value.hardReset();
     const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
     flashProgressDialog.value = 100;
     flashProgressDialog.label = `Flash complete in ${elapsed}s @ ${flashBaudLabel}. Finalizing...`;
