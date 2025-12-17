@@ -77,22 +77,11 @@ export interface EsptoolClient {
   readChipMetadata: () => Promise<ChipMetadata>;
 }
 
-type WriteFlashOptions = {
-  fileArray: Array<{ data: string; address?: number }>;
-  flashSize?: string;
-  flashMode?: string;
-  flashFreq?: string;
-  eraseAll?: boolean;
-  compress?: boolean;
-  reportProgress?: (fileIndex: number, written: number, total: number) => void;
-};
-
 export type CompatibleLoader = ESPLoader & {
   baudrate: number;
   changeBaud: (baud?: number) => Promise<void>;
   readReg: (addr: number) => Promise<number>;
   writeReg: (addr: number, value: number, mask?: number, delayUs?: number) => Promise<void>;
-  writeFlash: (options: WriteFlashOptions) => Promise<void>;
   flashMd5sum: (addr: number, size: number) => Promise<string>;
   after: (mode?: string) => Promise<void>;
   eraseFlash?: () => Promise<void>;
@@ -256,24 +245,6 @@ function decorateLoader(loader: ESPLoader, setBusy: BusySetter): CompatibleLoade
       const [, res] = await loader.checkCommand(ESP_SPI_FLASH_MD5, payload, 0, timeout);
       const md5 = new Uint8Array(res ?? []);
       return md5ToHex(md5);
-    });
-
-  decorated.writeFlash = async (options: WriteFlashOptions) =>
-    runBusy(async () => {
-      const files = options.fileArray ?? [];
-      if (options.eraseAll && typeof (loader as any).eraseFlash === 'function') {
-        await (loader as any).eraseFlash();
-      }
-      for (let i = 0; i < files.length; i += 1) {
-        const { data, address = 0 } = files[i];
-        const binary = bstrToUi8(data);
-        await loader.flashData(
-          binary.buffer,
-          (written, total) => options.reportProgress?.(i, written, total),
-          address,
-          options.compress ?? false,
-        );
-      }
     });
 
   const baseEraseFlash = (loader as any).eraseFlash?.bind(loader);
