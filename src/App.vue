@@ -631,7 +631,7 @@ import { InMemorySpiffsClient } from './utils/spiffs/spiffsClient';
 import { useFatfsManager, useLittlefsManager, useSpiffsManager } from './composables/useFilesystemManagers';
 import { useDialogs } from './composables/useDialogs';
 import { readPartitionTable } from './utils/partitions';
-import { createEsptoolClient, requestSerialPort, type CompatibleLoader } from './services/esptoolClient';
+import { createEsptoolClient, requestSerialPort, type CompatibleLoader, type CompatibleTransport } from './services/esptoolClient';
 import {
   SPIFFS_AUDIO_EXTENSIONS,
   SPIFFS_AUDIO_MIME_MAP,
@@ -920,7 +920,6 @@ async function loadLittlefsPartition(partition) {
   littlefsLoadingDialog.label = `Reading LittleFS${littlefsBaudLabel}...`;
   const attemptedConfigs = [];
   try {
-    await releaseTransportReader();
     const image = await readFlashToBuffer(partition.offset, partition.size, {
       label: `LittleFS${littlefsBaudLabel}`,
       cancelSignal: littlefsLoadCancelRequested,
@@ -1727,7 +1726,6 @@ async function loadFatfsPartition(partition) {
   fatfsLoadingDialog.visible = true;
   fatfsLoadingDialog.label = `Reading ${partition.label || 'FATFS'}${baudLabel}...`;
   try {
-    await releaseTransportReader();
     const image = await readFlashToBuffer(partition.offset, partition.size, {
       label: `${partition.label || 'FATFS'}${baudLabel}`,
       cancelSignal: fatfsLoadCancelRequested,
@@ -2574,7 +2572,6 @@ async function loadSpiffsPartition(partition) {
   spiffsLoadingDialog.visible = true;
   spiffsLoadingDialog.label = `Reading ${partition.label || 'SPIFFS'}${spiffsBaudLabel}...`;
   try {
-    await releaseTransportReader();
     const image = await readFlashToBuffer(partition.offset, partition.size, {
       label: `${partition.label || 'SPIFFS'}${spiffsBaudLabel}`,
       cancelSignal: spiffsLoadCancelRequested,
@@ -3238,7 +3235,6 @@ async function writeFilesystemImage(partition: any, image: Uint8Array, options: 
   if (!loader.value) {
     throw new Error('Loader unavailable.');
   }
-  await releaseTransportReader();
   await loader.value.flashData(
     toArrayBuffer(image),
     (written, total) => {
@@ -3617,7 +3613,7 @@ const confirmationDialog = reactive({
 });
 let confirmationResolver = null;
 const currentPort = ref(null);
-const transport = ref(null);
+const transport = ref<CompatibleTransport | null>(null);
 const loader = ref<CompatibleLoader | null>(null);
 const firmwareBuffer = ref(null);
 const firmwareName = ref('');
@@ -3761,7 +3757,7 @@ async function setConnectionBaud(targetBaud: string | number, options: SetBaudOp
         appendLog('Changing baud to ' + parsed.toLocaleString() + ' bps...', '[ESPConnect-Debug]');
       }
       loader.value.baudrate = parsed;
-      await loader.value.changeBaud(parsed);
+      await loader.value.setBaudrate(parsed);
       if (transport.value) {
         transport.value.baudrate = parsed;
       }
@@ -4925,26 +4921,6 @@ function serialPortsMatch(portA, portB) {
   return false;
 }
 
-// Cancel and release the current transport reader, if any.
-async function releaseTransportReader() {
-  const transportInstance = transport.value;
-  const reader = transportInstance?.reader;
-  if (!reader) {
-    return;
-  }
-  try {
-    await reader.cancel();
-  } catch (err) {
-    appendLog(`Monitor reader cancel failed: ${err?.message || err}`, '[ESPConnect-Debug]');
-  }
-  try {
-    reader.releaseLock?.();
-  } catch (err) {
-    appendLog(`Monitor reader release failed: ${err?.message || err}`, '[ESPConnect-Debug]');
-  }
-  transportInstance.reader = null;
-}
-
 // Decode monitor data chunks and buffer them for display while handling noise.
 function appendMonitorChunk(bytes) {
   if (!bytes || !bytes.length) return;
@@ -4997,16 +4973,6 @@ function clearMonitorOutput() {
   monitorNoiseWarned = false;
 }
 
-// Lazily create and return a reader for the current transport stream.
-function ensureTransportReader() {
-  const transportInstance = transport.value;
-  if (!transportInstance) return null;
-  if (!transportInstance.reader && transportInstance.device?.readable?.getReader) {
-    transportInstance.reader = transportInstance.device.readable.getReader();
-  }
-  return transportInstance.reader ?? null;
-}
-
 // React to browser-level serial disconnect events and clean up connections.
 async function handleSerialDisconnectEvent(event) {
   const eventPort = event?.target?.port ?? event?.port ?? null;
@@ -5028,13 +4994,11 @@ async function handleSerialDisconnectEvent(event) {
 
 // Read serial data in a loop, pushing it into the monitor until aborted.
 async function monitorLoop(signal) {
-  if (!transport.value || typeof transport.value.rawRead !== 'function') {
+  const transportInstance = transport.value;
+  if (!transportInstance) {
     throw new Error('Serial monitor not supported by current transport.');
   }
-  if (!ensureTransportReader()) {
-    throw new Error('Serial reader unavailable.');
-  }
-  const iterator = transport.value.rawRead();
+  const iterator = transportInstance.rawRead();
   for await (const chunk of iterator) {
     if (signal.aborted) break;
     if (!chunk || !chunk.length) continue;
@@ -5064,7 +5028,6 @@ async function startMonitor() {
     }
   }
   if (!monitorAutoResetPerformed) {
-    await releaseTransportReader();
     appendLog('Auto-resetting board before starting serial monitor output.', '[ESPConnect-Debug]');
     await resetBoard({ silent: true });
     monitorAutoResetPerformed = true;
@@ -5102,7 +5065,6 @@ async function stopMonitor(options: StopMonitorOptions = {}) {
   if (!monitorActive.value) return;
   const { closeConnection = false } = options;
   monitorAbortController.value?.abort();
-  await releaseTransportReader();
   monitorActive.value = false;
   monitorAbortController.value = null;
   cancelMonitorFlush();
@@ -5139,18 +5101,19 @@ async function stopMonitor(options: StopMonitorOptions = {}) {
 // Pulse RTS/DTR to reset the target board.
 async function resetBoard(options: ResetOptions = {}) {
   const { silent = false } = options;
-  if (!transport.value) {
-    appendLog('Cannot reset: transport not available.', '[ESPConnect-Warn]');
+  const currentLoader = loader.value;
+  if (!currentLoader) {
+    appendLog('Cannot reset: loader not available.', '[ESPConnect-Warn]');
     return;
   }
   try {
     if (!silent) {
       appendLog('Resetting board (toggle RTS).', '[ESPConnect-Debug]');
     }
-    await transport.value.setDTR(false);
-    await transport.value.setRTS(true);
-    await loader.value?.sleep?.(120);
-    await transport.value.setRTS(false);
+    await currentLoader.setDTR(false);
+    await currentLoader.setRTS(true);
+    await currentLoader.sleep(120);
+    await currentLoader.setRTS(false);
   } catch (err) {
     appendLog(`Board reset failed: ${err?.message || err}`, '[error]');
   }
@@ -5271,14 +5234,15 @@ async function connect() {
         appendLog(msg, '[ESPConnect-Debug]');
       },
     });
-    transport.value = esptool.transport;
+    const transportInstance = esptool.transport;
+    transport.value = transportInstance;
     loader.value = esptool.loader;
     currentBaud.value = connectBaud_defaultROM;
-    transport.value.baudrate = connectBaud_defaultROM;
+    transportInstance.baudrate = connectBaud_defaultROM;
 
     // Flush any input remaining on the transport
     try {
-      await transport.value.flushInput();
+      await transportInstance.flushInput();
       appendLog('Serial input flushed before handshake.', '[ESPConnect-Debug]');
     } catch (err) {
       appendLog(`Warning: unable to flush serial input before handshake (${formatErrorMessage(err)}).`, '[ESPConnect-Warn]');
@@ -5288,7 +5252,7 @@ async function connect() {
     connectDialog.message = 'Handshaking with ROM bootloader...';
     const esp = await esptool.connectAndHandshake();
     currentBaud.value = desiredBaud || connectBaud_defaultROM;
-    transport.value.baudrate = currentBaud.value;
+    transportInstance.baudrate = currentBaud.value;
     const previousSuspendState = suspendBaudWatcher;
     suspendBaudWatcher = true;
     selectedBaud.value = currentBaud.value as BaudRate;
@@ -5297,14 +5261,6 @@ async function connect() {
     });
     connected.value = true;
     appendLog(`Handshake complete with ${esp.chipName}. Collecting device details...`, '[ESPConnect-Debug]');
-
-    // if (chip?.CHIP_NAME === 'ESP32-C6' && chip.SPI_REG_BASE === 0x60002000) {
-    //   chip.SPI_REG_BASE = 0x60003000;
-    //   appendLog(
-    //     'Applied ESP32-C6 SPI register base workaround (0x60002000 → 0x60003000).',
-    //     '[ESPConnect-Debug]'
-    //   );
-    // }
 
     lastFlashBaud.value = currentBaud.value;
 
@@ -5321,7 +5277,7 @@ async function connect() {
       '[ESPConnect-Debug]'
     );
 
-    const flashId = await esptool.readFlashId();
+    const flashId = await esptool.loader.flashId();
     const id = Number.isFinite(flashId) ? flashId : null;
 
     const manufacturerCode = id !== null ? id & 0xff : null;
@@ -5670,7 +5626,7 @@ async function flashFirmware() {
       true
     );
 
-    await loader.value.after('hard_reset');
+    await loader.value.hardReset();
     const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
     flashProgressDialog.value = 100;
     flashProgressDialog.label = `Flash complete in ${elapsed}s @ ${flashBaudLabel}. Finalizing...`;

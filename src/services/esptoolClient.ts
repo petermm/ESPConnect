@@ -71,84 +71,52 @@ export interface EsptoolClient {
   loader: CompatibleLoader;
   transport: CompatibleTransport;
   connectAndHandshake: () => Promise<ConnectHandshakeResult>;
-  disconnect: () => Promise<void>;
-  changeBaud: (baud: number) => Promise<void>;
   readPartitionTable: (offset?: number, length?: number) => Promise<any[]>;
-  readFlashId: () => Promise<number | undefined>;
   readChipMetadata: () => Promise<ChipMetadata>;
 }
 
-type WriteFlashOptions = {
-  fileArray: Array<{ data: string; address?: number }>;
-  flashSize?: string;
-  flashMode?: string;
-  flashFreq?: string;
-  eraseAll?: boolean;
-  compress?: boolean;
-  reportProgress?: (fileIndex: number, written: number, total: number) => void;
-};
-
 export type CompatibleLoader = ESPLoader & {
   baudrate: number;
-  changeBaud: (baud?: number) => Promise<void>;
   readReg: (addr: number) => Promise<number>;
   writeReg: (addr: number, value: number, mask?: number, delayUs?: number) => Promise<void>;
-  writeFlash: (options: WriteFlashOptions) => Promise<void>;
   flashMd5sum: (addr: number, size: number) => Promise<string>;
-  after: (mode?: string) => Promise<void>;
   eraseFlash?: () => Promise<void>;
 };
 
 const MD5_TIMEOUT_PER_MB = 8000;
 const sleep = (ms = 50) => new Promise(resolve => setTimeout(resolve, ms));
 
-class CompatibleTransport {
+export class CompatibleTransport {
   device: SerialPort;
   baudrate: number;
   tracing: boolean;
-  private _reader: any;
-  private readonly virtualReader = {
-    cancel: async () => { },
-    releaseLock: () => { },
-  };
-  private readonly getLoader: () => CompatibleLoader | null;
+  loader:CompatibleLoader;
   private readonly isBusy: BusyGetter;
 
   constructor(
     device: SerialPort,
     tracing: boolean,
-    getLoader: () => CompatibleLoader | null,
+    loader:CompatibleLoader,
     isBusy: BusyGetter,
   ) {
     this.device = device;
     this.tracing = tracing;
     this.baudrate = ESP_ROM_BAUD;
-    this.getLoader = getLoader;
     this.isBusy = isBusy;
-    this._reader = this.virtualReader;
-  }
-
-  get reader() {
-    return this._reader ?? this.virtualReader;
-  }
-
-  set reader(value: any) {
-    this._reader = value ?? this.virtualReader;
+    this.loader = loader;
   }
 
   async flushInput() {
-    const loader = this.getLoader();
-    const buffer = getInputBuffer(loader);
+    const buffer = getInputBuffer(this.loader);
     if (buffer) {
       buffer.length = 0;
     }
   }
 
   async disconnect() {
-    const loader = this.getLoader();
-    if (loader?.disconnect) {
+    if (this.loader) {
       try {
-        const maybeDisconnect = loader.disconnect();
+        const maybeDisconnect = this.loader.disconnect();
         // Guard against hanging if the device is already gone.
         await Promise.race([maybeDisconnect, sleep(800)]);
       } catch {
@@ -160,37 +128,19 @@ class CompatibleTransport {
     } catch {
       // swallow
     }
-    this.reader = this.virtualReader;
-  }
-
-  async setDTR(state: boolean) {
-    try {
-      await this.device.setSignals({ dataTerminalReady: state });
-    } catch {
-      // swallow
-    }
-  }
-
-  async setRTS(state: boolean) {
-    try {
-      await this.device.setSignals({ requestToSend: state });
-    } catch {
-      // swallow
-    }
   }
 
   async *rawRead() {
     // Stream raw bytes from the loader's shared input buffer without fighting the bootloader reader lock.
     while (true) {
-      const loader = this.getLoader();
-      if (!loader) {
+      if (!this.loader) {
         break;
       }
       if (this.isBusy()) {
         await sleep(25);
         continue;
       }
-      const buffer = getInputBuffer(loader);
+      const buffer = getInputBuffer(this.loader);
       if (buffer && buffer.length > 0) {
         const chunk = new Uint8Array(buffer.splice(0));
         if (chunk.length > 0) {
@@ -230,14 +180,6 @@ function createLogger(terminal: any, debugLogging: boolean): Logger {
   };
 }
 
-function bstrToUi8(data: string) {
-  const view = new Uint8Array(data.length);
-  for (let i = 0; i < data.length; i += 1) {
-    view[i] = data.charCodeAt(i) & 0xff;
-  }
-  return view;
-}
-
 function md5ToHex(md5: Uint8Array) {
   return Array.from(md5.slice(0, 16))
     .map(b => b.toString(16).padStart(2, '0'))
@@ -269,13 +211,6 @@ function decorateLoader(loader: ESPLoader, setBusy: BusySetter): CompatibleLoade
   decorated.readFlash = async (...args: Parameters<ESPLoader['readFlash']>) =>
     runBusy(() => baseReadFlash(...args));
 
-  decorated.changeBaud = async (baud?: number) =>
-    runBusy(async () => {
-      const target = baud ?? decorated.baudrate ?? DEFAULT_ROM_BAUD;
-      decorated.baudrate = target;
-      await loader.setBaudrate(target);
-    });
-
   decorated.readReg = async (addr: number) => runBusy(() => loader.readRegister(addr));
 
   decorated.writeReg = async (addr: number, value: number, mask = 0xffffffff, delayUs = 0) =>
@@ -290,37 +225,10 @@ function decorateLoader(loader: ESPLoader, setBusy: BusySetter): CompatibleLoade
       return md5ToHex(md5);
     });
 
-  decorated.writeFlash = async (options: WriteFlashOptions) =>
-    runBusy(async () => {
-      const files = options.fileArray ?? [];
-      if (options.eraseAll && typeof (loader as any).eraseFlash === 'function') {
-        await (loader as any).eraseFlash();
-      }
-      for (let i = 0; i < files.length; i += 1) {
-        const { data, address = 0 } = files[i];
-        const binary = bstrToUi8(data);
-        await loader.flashData(
-          binary.buffer,
-          (written, total) => options.reportProgress?.(i, written, total),
-          address,
-          options.compress ?? false,
-        );
-      }
-    });
-
   const baseEraseFlash = (loader as any).eraseFlash?.bind(loader);
   if (baseEraseFlash) {
     (decorated as any).eraseFlash = async () => runBusy(() => baseEraseFlash());
   }
-
-  decorated.after = async (mode = 'hard_reset') =>
-    runBusy(async () => {
-      if (mode === 'hard_reset') {
-        await loader.hardReset(false);
-      } else if (mode === 'soft_reset') {
-        await loader.memFinish?.(0);
-      }
-    });
 
   return decorated;
 }
@@ -376,8 +284,7 @@ export function createEsptoolClient({
     },
   });
 
-  const getLoader = () => loader ?? null;
-  const transport = new CompatibleTransport(port, debugSerial ?? false, getLoader, isBusy);
+  const transport = new CompatibleTransport(port, debugSerial ?? false, loader, isBusy);
 
   const status = (msg: string) => onStatus?.(msg);
 
@@ -408,7 +315,7 @@ export function createEsptoolClient({
 
       if (desiredBaud && desiredBaud !== DEFAULT_ROM_BAUD) {
         loader.baudrate = desiredBaud;
-        await loader.changeBaud(desiredBaud);
+        await loader.setBaudrate(desiredBaud);
         transport.baudrate = desiredBaud;
       }
 
@@ -426,19 +333,6 @@ export function createEsptoolClient({
       return result;
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function changeBaud(baud: number) {
-    await loader.changeBaud(baud);
-    transport.baudrate = loader.baudrate;
-  }
-
-  async function disconnect() {
-    try {
-      await transport.disconnect();
-    } catch {
-      // swallow
     }
   }
 
@@ -463,17 +357,6 @@ export function createEsptoolClient({
       entries.push({ label: label || `type 0x${type.toString(16)}`, type, subtype, offset: addr, size });
     }
     return entries;
-  }
-
-  async function readFlashId() {
-    setBusy(true);
-    try {
-      return await loader.flashId();
-    } catch {
-      return undefined;
-    } finally {
-      setBusy(false);
-    }
   }
 
   async function readChipMetadata(): Promise<ChipMetadata> {
@@ -549,24 +432,11 @@ export function createEsptoolClient({
     loader: loaderProxy,
     transport,
     connectAndHandshake,
-    disconnect,
-    changeBaud,
     readPartitionTable,
-    readFlashId,
     readChipMetadata,
   };
 
   return client;
-}
-
-function safeMac(loader: CompatibleLoader) {
-  try {
-    const mac = loader.macAddr();
-    if (!Array.isArray(mac)) return undefined;
-    return mac;
-  } catch {
-    return undefined;
-  }
 }
 
 function formatMac(macArr: number[] | undefined) {
