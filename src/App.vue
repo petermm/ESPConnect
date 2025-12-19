@@ -120,7 +120,7 @@
                 :dirty="littlefsState.dirty" :backup-done="littlefsState.backupDone || littlefsState.sessionBackupDone"
                 :error="littlefsState.error" :has-partition="hasLittlefsPartitionSelected"
                 :has-client="Boolean(littlefsState.client)" :usage="littlefsState.usage"
-                :disk-version="littlefsState.diskVersion"
+                :disk-version="littlefsState.diskVersion" :format-disk-version="littlefsFormatDiskVersion"
                 :upload-blocked="littlefsState.uploadBlocked" :upload-blocked-reason="littlefsState.uploadBlockedReason"
                 fs-label="LittleFS" :load-cancelled="littlefsState.loadCancelled" partition-title="LittleFS Partition"
                 empty-state-message="No LittleFS files found. Read the partition or upload to begin."
@@ -652,9 +652,6 @@ import {
   APP_IMAGE_HEADER_MAGIC,
   APP_SCAN_LENGTH,
   APP_VERSION,
-  FATFS_WASM_ENTRY,
-  LITTLEFS_MODULE_CACHE_KEY,
-  LITTLEFS_WASM_ENTRY,
   OTA_SELECT_ENTRY_SIZE,
   asciiDecoder,
 } from './constants/app';
@@ -674,6 +671,7 @@ import { PWM_TABLE } from './utils/pwm-capabilities-table';
 
 let littlefsModulePromise = null;
 let fatfsModulePromise = null;
+const littlefsFormatDiskVersion = ref<((version: number) => string) | null>(null);
 
 // Sort device facts using the preferred display order, then fall back to name sorting.
 // function sortFacts(facts) {
@@ -700,23 +698,19 @@ let fatfsModulePromise = null;
 // Lazy-load and cache the LittleFS WASM module.
 async function loadLittlefsModule() {
   if (!littlefsModulePromise) {
-    const moduleUrl = resolveLittlefsModuleUrl();
-    littlefsModulePromise = import(
-      /* @vite-ignore */ moduleUrl
-    ).catch(error => {
-      littlefsModulePromise = null;
-      throw error;
-    });
+    littlefsModulePromise = import('./wasm/littlefs/index.js')
+      .then(module => {
+        littlefsFormatDiskVersion.value =
+          typeof module.formatDiskVersion === 'function' ? module.formatDiskVersion : null;
+        return module;
+      })
+      .catch(error => {
+        littlefsModulePromise = null;
+        littlefsFormatDiskVersion.value = null;
+        throw error;
+      });
   }
   return littlefsModulePromise;
-}
-
-// Build a cache-busted URL for the LittleFS WASM bundle.
-function resolveLittlefsModuleUrl() {
-  const base = typeof window !== 'undefined' && window.location ? window.location.href : import.meta.url;
-  const url = new URL(LITTLEFS_WASM_ENTRY, base);
-  url.searchParams.set('v', LITTLEFS_MODULE_CACHE_KEY);
-  return url.toString();
 }
 
 // Normalize filesystem paths by enforcing a leading slash and collapsing separators.
@@ -776,11 +770,7 @@ function joinFsPath(basePath, name) {
 // Lazy-load and cache the FATFS WASM module.
 async function loadFatfsModule() {
   if (!fatfsModulePromise) {
-    const base = typeof window !== 'undefined' && window.location ? window.location.href : import.meta.url;
-    const moduleUrl = new URL(FATFS_WASM_ENTRY, base);
-    fatfsModulePromise = import(
-      /* @vite-ignore */ moduleUrl.toString()
-    ).catch(error => {
+    fatfsModulePromise = import('./wasm/fatfs/index.js').catch(error => {
       fatfsModulePromise = null;
       throw error;
     });

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.12
+- Moved WASM modules from public/ to src/ to ensure proper Vite module handling and eliminate dev/build import errors.
+
 ## 1.0.11
 - Added standalone electron app in release assets by Jason2866 ([PR #56](https://github.com/thelastoutpostworkshop/ESPConnect/pull/56)).
 - Fixed filesystem image flashing to pass an `ArrayBuffer` into `flashData` (avoids `ArrayBufferLike` / `SharedArrayBuffer` TypeScript warnings).
