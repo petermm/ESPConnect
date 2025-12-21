@@ -12,20 +12,8 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["vite/client"]
+    "isolatedModules": true
   },
-  "include": ["src/i18n/**/*", "src/main.js"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/components",
-    "src/composables",
-    "src/constants",
-    "src/services",
-    "src/types",
-    "src/utils",
-    "src/wasm",
-    "src/App.vue"
-  ]
+  "include": ["src/i18n/**/*.js"],
+  "exclude": ["node_modules", "dist"]
 }

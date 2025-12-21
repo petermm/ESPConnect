@@ -10,7 +10,6 @@ import {
   regexTranslations, 
   excludeSelectors,
   skipPatterns,
-  currentLanguage,
   setLanguage,
   getLanguage 
 } from './translations.js';
@@ -877,7 +876,7 @@ export {
 
 // 暴露到全局，方便调试和控制台使用
 if (typeof window !== 'undefined') {
-  window.ESPConnectI18n = {
+  /** @type {any} */ (window).ESPConnectI18n = {
     toggleLanguage,
     switchLanguage,
     getLanguage,
