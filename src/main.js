@@ -9,9 +9,8 @@ import * as directives from 'vuetify/directives';
 import '@mdi/font/css/materialdesignicons.css';
 import './style.css';
 
-// 国际化支持 - 只需这一行即可启用中英文切换
+// Internationalization support - Enable Chinese/English switching with just this one line.
 import { initI18n } from './i18n/index.js';
-initI18n();
 
 const vuetify = createVuetify({
   components,
@@ -19,3 +18,4 @@ const vuetify = createVuetify({
 });
 
 createApp(App).use(vuetify).mount('#app');
+initI18n();
