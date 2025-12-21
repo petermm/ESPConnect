@@ -918,7 +918,7 @@ export const skipPatterns = [
 /**
  * 当前语言
  */
-export let currentLanguage = localStorage.getItem('espconnect-language') || 'zh';
+export let currentLanguage = localStorage.getItem('espconnect-language') || 'en';
 
 export function setLanguage(lang) {
   currentLanguage = lang;
