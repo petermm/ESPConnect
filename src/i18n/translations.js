@@ -886,6 +886,10 @@ export const excludeSelectors = [
   // 设备芯片名称（如 ESP32-S3）不应被翻译
   '.device-chip-name',
   '.device-chip-alias',
+  // 串口终端输出区域 - 防止翻译设备发送的原始数据
+  '.monitor-terminal',
+  '.monitor-terminal__output',
+  '.monitor-shell pre',
 ];
 
 /**

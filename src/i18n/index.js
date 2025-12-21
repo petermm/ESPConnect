@@ -425,18 +425,32 @@ function reverseTranslateText(text) {
 
 /**
  * 检查元素是否应该被排除
+ * 会检查元素本身及其所有祖先元素
  */
 function shouldExclude(element) {
-  if (!element || !element.matches) return false;
+  if (!element) return false;
+  
+  // 如果没有 matches 方法（如文本节点），检查父元素
+  if (!element.matches) {
+    return element.parentElement ? shouldExclude(element.parentElement) : false;
+  }
   
   try {
-    return excludeSelectors.some(selector => {
+    // 检查元素本身是否匹配排除选择器
+    for (const selector of excludeSelectors) {
       try {
-        return element.matches(selector) || element.closest(selector);
+        if (element.matches(selector)) {
+          return true;
+        }
+        // 检查是否有匹配的祖先元素
+        if (element.closest(selector)) {
+          return true;
+        }
       } catch {
-        return false;
+        // 选择器无效，跳过
       }
-    });
+    }
+    return false;
   } catch {
     return false;
   }
@@ -449,7 +463,15 @@ function processTextNode(textNode, forceLang = null) {
   if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
   
   const parent = textNode.parentElement;
-  if (!parent || shouldExclude(parent)) return;
+  if (!parent) return;
+  
+  // 检查是否在排除区域内（包括检查所有祖先）
+  if (shouldExclude(parent)) return;
+  
+  // 额外检查：如果在 pre 或 code 标签内，直接跳过
+  if (parent.closest('pre') || parent.closest('code') || parent.closest('.monitor-terminal')) {
+    return;
+  }
 
   const lang = forceLang || getLanguage();
   const currentText = textNode.textContent;
