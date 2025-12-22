@@ -143,7 +143,7 @@ const unusedBytesDisplay = computed(() =>
 );
 const partitionCardTitle = computed(() => {
   const label = flashSizeLabel.value?.trim();
-  return label ? `Partitions Aú ${label}` : 'Partitions';
+  return label ? `Partitions · ${label}` : 'Partitions';
 });
 </script>
 
