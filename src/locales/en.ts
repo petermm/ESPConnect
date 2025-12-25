@@ -220,6 +220,69 @@
     },
     unnamed: 'Unnamed',
   },
+  filesystem: {
+    partitionTitle: '{fs} Partition',
+    partitionTitleWithSize: '{base} — {size}',
+    partitionSelectLabel: 'Partition name',
+    controls: {
+      read: 'Read',
+      backup: 'Backup',
+      restore: 'Restore Image',
+      format: 'Format',
+      save: 'Save to Flash',
+    },
+    backupReminder:
+      'Download a backup image first (use the "{backup}" button once per session). "{save}" becomes available after any successful backup made during this connection.',
+    saveHint: 'Changes are staged locally until you click "{save}". A recent backup ensures you can recover if something goes wrong.',
+    filesTitle: 'Files',
+    unsavedChanges: 'Unsaved changes',
+    usage: {
+      used: 'Used {percent}% ({used} / {capacity})',
+      free: 'Free {free}',
+    },
+    upload: {
+      selectFile: 'Select file',
+      uploadButton: 'Upload',
+      dropHint: 'Drop files to add',
+    },
+    filter: {
+      search: 'Filter files',
+      type: 'File type',
+    },
+    noMatches: 'No files match the current filter.',
+    table: {
+      name: 'Name',
+      size: 'Size',
+      actions: 'Actions',
+    },
+    pagination: {
+      all: 'All',
+    },
+    fileCategory: {
+      all: 'All types',
+      text: 'Text',
+      image: 'Images',
+      audio: 'Audio',
+      other: 'Other',
+    },
+    filterCount: {
+      noFiles: 'No files',
+      all: '{count} files',
+      partial: '{filtered} of {total} files',
+    },
+    emptyState: 'No files detected. Upload or restore a {fs} image to begin.',
+    loadCancelled: '{fs} load cancelled. {action} to fetch the partition again.',
+    readOnly: '{fs} is in read-only mode. {detail}',
+    readOnlyDetail: 'Changes cannot be saved.',
+    preview: {
+      listen: 'Listen',
+      view: 'View',
+    },
+    actions: {
+      download: 'Download {file}',
+      delete: 'Delete {file}',
+    },
+  },
   nvsInspector: {
     title: 'NVS Inspector',
     experimentalTooltip: 'Experimental feature: output may be incomplete or inaccurate.',

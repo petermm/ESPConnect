@@ -220,7 +220,70 @@
     },
     unnamed: '未命名',
   },
-    nvsInspector: {
+  filesystem: {
+    partitionTitle: '{fs} 分区',
+    partitionTitleWithSize: '{base} — {size}',
+    partitionSelectLabel: '分区名称',
+    controls: {
+      read: '读取',
+      backup: '备份',
+      restore: '恢复镜像',
+      format: '格式化',
+      save: '保存到闪存',
+    },
+    backupReminder:
+      '请先下载备份镜像（本会话使用“{backup}”按钮一次）。成功备份后，“{save}”按钮才可用。',
+    saveHint: '变更会暂存于本地，直到你点击“{save}”。最近的备份可在出现问题时帮助恢复。',
+    filesTitle: '文件',
+    unsavedChanges: '有未保存的更改',
+    usage: {
+      used: '已使用 {percent}%（{used} / {capacity}）',
+      free: '可用 {free}',
+    },
+    upload: {
+      selectFile: '选择文件',
+      uploadButton: '上传',
+      dropHint: '拖放文件以添加',
+    },
+    filter: {
+      search: '筛选文件',
+      type: '文件类型',
+    },
+    noMatches: '没有文件符合当前筛选。',
+    table: {
+      name: '名称',
+      size: '大小',
+      actions: '操作',
+    },
+    pagination: {
+      all: '全部',
+    },
+    fileCategory: {
+      all: '所有类型',
+      text: '文本',
+      image: '图片',
+      audio: '音频',
+      other: '其他',
+    },
+    filterCount: {
+      noFiles: '没有文件',
+      all: '{count} 个文件',
+      partial: '{filtered} / {total} 个文件',
+    },
+    emptyState: '未检测到文件。请上传或恢复一个 {fs} 镜像以开始。',
+    loadCancelled: '{fs} 加载已取消。使用“{action}”重新获取分区。',
+    readOnly: '{fs} 处于只读模式。{detail}',
+    readOnlyDetail: '无法保存更改。',
+    preview: {
+      listen: '收听',
+      view: '查看',
+    },
+    actions: {
+      download: '下载 {file}',
+      delete: '删除 {file}',
+    },
+  },
+  nvsInspector: {
     title: 'NVS 检查器',
     experimentalTooltip: '实验性功能：输出可能不完整或不准确。',
     experimentalBadge: '实验性',
@@ -291,7 +354,7 @@
       all: '全部',
     },
   },
-language: {
+  language: {
     english: '英语',
     chinese: '中文',
     switchTo: '切换到{language}',
