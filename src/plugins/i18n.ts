@@ -1,10 +1,11 @@
 import { createI18n } from 'vue-i18n';
 import en from '../locales/en';
+import fr from '../locales/fr';
 import zh from '../locales/zh';
-import { en as vuetifyEn, zhHans as vuetifyZhHans } from 'vuetify/locale';
+import { en as vuetifyEn, fr as vuetifyFr, zhHans as vuetifyZhHans } from 'vuetify/locale';
 
 const STORAGE_KEY = 'espconnect-language';
-const supportedLocales = ['en', 'zh'] as const;
+const supportedLocales = ['en', 'fr', 'zh'] as const;
 export type SupportedLocale = (typeof supportedLocales)[number];
 
 function normalizeLocale(value: unknown): SupportedLocale {
@@ -35,6 +36,10 @@ export const i18n = createI18n({
     en: {
       ...en,
       $vuetify: vuetifyEn,
+    },
+    fr: {
+      ...fr,
+      $vuetify: vuetifyFr,
     },
     zh: {
       ...zh,

@@ -4,13 +4,19 @@
 ### Improvement
 - Internationalization: Migrated UI translations to the standard Vue I18n + Vuetify integration.
 This replaces the previous DOM-based translation shim with a fully reactive, maintainable solution.
-- Add reconnect after flashing operations so the ROM has time to finalize
+- Added French (fr) support by Patriboom
+ ([PR #85](https://github.com/thelastoutpostworkshop/ESPConnect/pull/85)).
+- Added reconnect after flashing operations so the ROM has time to finalize
 - File systems restore now show the filename in the confirmation dialog
 - Append app version + timestamp to every log entry  
 
 ### Internal
 - Remove unused legacy code that was needed for esptool-js
 - CI now zips the built dist/ directory, uploads it, and includes it in release downloads so the static web bundle can be grab directly
+
+### New Contributors
+- [Patriboom](https://github.com/Patriboom) made their first contribution in ([PR #85](https://github.com/thelastoutpostworkshop/ESPConnect/pull/85))
+
 ## 1.1.1
 
 ### Fixed

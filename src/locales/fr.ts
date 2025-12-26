@@ -19,7 +19,7 @@
   },
   resources: {
     tutorial: 'Tutoriel',
-    buyCoffee: 'Un p`tit café?',
+    buyCoffee: 'Achète-moi un café',
     getHelp: 'Aide',
   },
   actions: {
@@ -266,7 +266,6 @@
   },
   flashFirmware: {
     warning:
-      'Firmware tools are intended for advanced users. Writing or erasing flash can permanently remove data or render the microcontroller unbootable. Double-check settings before proceeding.',
       'Les outils de gestion du firmware sont destinés à des usagers avertis. Des mauvais usages peuvent abîmer voire détruire le micro-contrôleur. Vérifiez deux fois avant d`appliquer vos modifications.',
     backup: {
       title: 'Sauvegarde et remplacement',
@@ -326,7 +325,7 @@
     },
     alerts: {
       unusedFlash: {
-        detected: 'Mémoire Flash inutilisée - environ $1（$2 octets）pouvant être utilisé',
+        detected: 'Mémoire Flash inutilisée - environ {amount}({bytes} octets)）pouvant être utilisés',
         learn: 'Voir ',
         or: 'ou encore',
       },
@@ -400,7 +399,7 @@
       partial: '{filtered} or {total} fichiers',
     },
     emptyState: 'Aucun fichier détecté. Téléversez ou restaurez une image {fs} pour commencer.',
-    loadCancelled: 'Chargemenent annulé du fichier {fs}. Utilisez "lire" pour recommencer le partitionnement.',
+    loadCancelled: 'Chargement de {fs} annulé. {action} pour relire la partition.',
     readOnly: '{fs} est en mode "lecture seule".  Aucun changement ne peut être enregistré. {detail}',
     readOnlyDetail: 'Les changements ne peuvent pas être enregistrés.',
     versionLabel: 'LittleFS v{version}',
@@ -442,7 +441,7 @@
     keys: {
       emptyState: 'Lire NVS et ses clefs.',
       title: 'Clefs',
-      pageFilter: 'Page p.{page}',
+      pageFilter: 'Page p{page}',
       filters: {
         namespace: 'Espace',
         key: 'Clef',
@@ -500,7 +499,7 @@
     english: 'English',
     french: 'Français',
     chinese: '简体中文',
-    switchTo: 'Switch to {language}',
+    switchTo: 'Passer à {language}',
   },
   theme: {
     light: 'Clair',

@@ -4051,10 +4051,12 @@ const themeIcon = computed(() =>
 const currentLanguage = computed<SupportedLocale>(() => getLanguage());
 const languageOptions = computed(() => [
   { code: 'en', label: t('language.english') },
+  { code: 'fr', label: t('language.french') },
   { code: 'zh', label: t('language.chinese') },
 ]);
 const currentLanguageLabel = computed(() =>
-  t(currentLanguage.value === 'en' ? 'language.english' : 'language.chinese'),
+  languageOptions.value.find(lang => lang.code === currentLanguage.value)?.label ??
+  t('language.english'),
 );
 const otherLanguageLabel = computed(() => {
   const option = languageOptions.value.find(lang => lang.code !== currentLanguage.value);
