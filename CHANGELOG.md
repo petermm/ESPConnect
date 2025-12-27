@@ -1,5 +1,6 @@
 # Changelog
 
+## 1.1.3
 ## 1.1.2
 ### Improvement
 - Internationalization: Migrated UI translations to the standard Vue I18n + Vuetify integration.
