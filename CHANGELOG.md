@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.2-preview
+## 1.1.2
 ### Improvement
 - Internationalization: Migrated UI translations to the standard Vue I18n + Vuetify integration.
 This replaces the previous DOM-based translation shim with a fully reactive, maintainable solution.
