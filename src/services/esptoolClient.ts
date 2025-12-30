@@ -305,7 +305,11 @@ export function createEsptoolClient({
 
   async function syncWithStub(): Promise<void> {
     try {
-      status({ translationKey: 'dialogs.reconnectingStub', message: 'Reconnect and sync with the stub' });
+      status({
+        translationKey: 'dialogs.reconnectingStub',
+        message: 'Reconnect and sync with the stub',
+        showInDialog: false,
+      });
       await loader.reconnect();
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
@@ -324,6 +328,7 @@ export function createEsptoolClient({
     try {
       status({
         translationKey: 'dialogs.openingSerialPort',
+        message: 'Opening serial port...',
         showInDialog: true,
       });
       if (!port.readable || !port.writable) {
@@ -334,6 +339,7 @@ export function createEsptoolClient({
 
       status({
         translationKey: 'dialogs.handshakingBootloader',
+        message: 'Handshaking with ROM bootloader...',
         showInDialog: true,
       });
       await loader.initialize();
@@ -343,6 +349,7 @@ export function createEsptoolClient({
 
       status({
         translationKey: 'dialogs.loadingStubFlasher',
+        message: 'Loading stub flasher...',
         showInDialog: true,
       });
       const stub = await loader.runStub();
@@ -360,7 +367,8 @@ export function createEsptoolClient({
       try {
         status({
           translationKey: 'dialogs.gettingSecurityInfo',
-          showInDialog: true,
+          message: 'Getting security information...',
+          showInDialog: false,
         });
         securityInfo = await loader.getSecurityInfo();
         securityFacts = buildSecurityFacts(securityInfo, chipName);

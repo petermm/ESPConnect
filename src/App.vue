@@ -5708,17 +5708,17 @@ async function connect() {
         if (!payload) {
           return;
         }
-        const translated =
+        const dialogText =
           payload.translationKey != null
             ? t(payload.translationKey, payload.params ?? {})
-            : '';
-        const resolvedMessage = translated || payload.message || '';
-        if (resolvedMessage) {
-          appendLog(resolvedMessage, '[ESPConnect-Debug]');
+            : payload.message ?? '';
+        const englishMessage = payload.message ?? '';
+        if (englishMessage) {
+          appendLog(englishMessage, '[ESPConnect-Debug]');
         }
         const showInDialog = payload.showInDialog ?? true;
-        if (showInDialog && resolvedMessage) {
-          connectDialog.message = resolvedMessage;
+        if (showInDialog && dialogText) {
+          connectDialog.message = dialogText;
         }
       },
     });
