@@ -2,22 +2,17 @@ import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { LittlefsEntry } from '../types/littlefs';
 import type { Spiffs } from '../wasm/spiffs';
+import type { LittleFSEntry as LittlefsRawEntry } from '../wasm/littlefs/index.js';
 
 export interface FatFSEntry {
   path: string;
   size: number;
 }
 
-export interface LittleFSEntry {
-  path: string;
-  size: number;
-  type: "file" | "dir";
-}
-
 export type SpiffsClient = Spiffs;
 
 export type LittlefsClient = {
-  list?: (path?: string) =>  LittleFSEntry[];
+  list?: (path?: string) => LittlefsRawEntry[];
   readFile?: (path: string) => any;
   read?: (path: string) => Uint8Array;
   writeFile?: (path: string, data: any) => any;
@@ -34,13 +29,15 @@ export type LittlefsClient = {
 };
 
 export type FatfsClient = {
-  list?: () => FatFSEntry[];
+  list?: (path?: string) => FatFSEntry[];
   writeFile: (path: string, data: any) => any;
   deleteFile: (path: string) => any;
   format: () => any;
   toImage: () => Uint8Array;
   readFile?: (path: string) => Uint8Array;
   read?: (path: string) => any;
+  mkdir?: (path: string) => any;
+  getUsage?: () => { capacityBytes: number; usedBytes: number; freeBytes: number };
 };
 
 export function useSpiffsManager() {
@@ -160,7 +157,9 @@ export function useFatfsManager(defaultBlockSize: number) {
     lastReadSize: 0,
     lastReadImage: null as Uint8Array | null,
     client: null as FatfsClient | null,
-    files: [] as Array<{ name?: string; size?: number }>,
+    files: [] as LittlefsEntry[],
+    allFiles: [] as LittlefsEntry[],
+    currentPath: '/' as string,
     status: t('filesystemStatus.fatfs'),
     loading: false,
     busy: false,
@@ -177,7 +176,7 @@ export function useFatfsManager(defaultBlockSize: number) {
       usedBytes: 0,
       freeBytes: 0,
     },
-    baselineFiles: [] as Array<{ name?: string; size?: number }>,
+    baselineFiles: [] as LittlefsEntry[],
     uploadBlocked: false,
     uploadBlockedReason: '',
     blockSize: defaultBlockSize,

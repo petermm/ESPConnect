@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.1.4-preview
+## 1.1.4-preview-2
 ### Improvement
+- Fat filesystem now supports folders
 - Serial monitor start button now shows a loading indicator while the monitor is being initialized
 - Delay removed for the connection dialog
 - Connect dialog now displays localized status updates while the bootloader workflow runs
