@@ -86,12 +86,14 @@
             @update:model-value="value => emit('firmware-input', value)" />
         </v-col>
         <v-col cols="12" md="4">
-          <v-text-field :model-value="flashOffset" :label="t('flashFirmware.firmware.flashOffset')" placeholder="0x0" density="comfortable"
-            :disabled="busy || maintenanceBusy" @update:model-value="value => emit('update:flashOffset', value)" />
+        <v-text-field :model-value="flashOffset" :label="t('flashFirmware.firmware.flashOffset')" placeholder="0x0" density="comfortable"
+            :disabled="busy || maintenanceBusy" @update:model-value="value => emit('update:flashOffset', value)"
+            data-testid="flash-offset-input" />
         </v-col>
         <v-col cols="12" md="4">
           <v-select :model-value="selectedPreset" :items="offsetPresets" :label="t('flashFirmware.firmware.recommendedOffsets')" item-title="label"
             item-value="value" clearable density="comfortable" :disabled="busy || maintenanceBusy"
+            data-testid="flash-preset-select"
             @update:model-value="value => handlePresetChange(value)">
             <template #item="{ props, item }">
               <v-list-item v-bind="props" class="partition-select__item">
@@ -129,7 +131,7 @@
 
 
 
-  <v-card class="tools-card mt-6" variant="tonal" prepend-icon="mdi-chip">
+  <v-card class="tools-card mt-6" variant="tonal" prepend-icon="mdi-chip" data-testid="tool-register-card">
     <template v-slot:title>
       <span class="font-weight-black">{{ t('flashFirmware.registerAccess.title') }}</span>
     </template>
@@ -167,20 +169,23 @@
       <v-row dense>
         <v-col cols="12" md="6">
           <v-text-field :model-value="registerAddress" :label="t('flashFirmware.registerAccess.registerAddress')" placeholder="0x60000000"
-            density="comfortable" :disabled="busy || maintenanceBusy"
+            density="comfortable" :disabled="busy || maintenanceBusy" data-testid="register-address-input"
             @update:model-value="value => emit('update:registerAddress', value)" />
         </v-col>
         <v-col cols="12" md="6">
           <v-text-field :model-value="registerValue" :label="t('flashFirmware.registerAccess.valueLabel')" placeholder="0x0" density="comfortable"
-            :disabled="busy || maintenanceBusy" @update:model-value="value => emit('update:registerValue', value)" />
+            :disabled="busy || maintenanceBusy" data-testid="register-value-input"
+            @update:model-value="value => emit('update:registerValue', value)" />
         </v-col>
       </v-row>
       <div class="tools-card__actions">
-        <v-btn color="primary" variant="tonal" :disabled="busy || maintenanceBusy" @click="emit('read-register')">
+        <v-btn color="primary" variant="tonal" :disabled="busy || maintenanceBusy" @click="emit('read-register')"
+          data-testid="register-read-btn">
           <v-icon start>mdi-eye</v-icon>
           {{ t('flashFirmware.registerAccess.readButton') }}
         </v-btn>
-        <v-btn color="primary" variant="text" :disabled="busy || maintenanceBusy" @click="emit('write-register')">
+        <v-btn color="primary" variant="text" :disabled="busy || maintenanceBusy" @click="emit('write-register')"
+          data-testid="register-write-btn">
           <v-icon start>mdi-pencil</v-icon>
           {{ t('flashFirmware.registerAccess.writeButton') }}
         </v-btn>

@@ -91,6 +91,59 @@ const CHIP_NAME = 'ESP32-S3';
 const MAC_ADDRESS = 'aa:bb:cc:dd:ee:ff';
 const FLASH_SIZE = '16MB';
 const MOCK_MD5 = 'd41d8cd98f00b204e9800998ecf8427e';
+const PARTITION_TABLE_OFFSET = 0x8000;
+const PARTITION_TABLE_SIZE = 0x400;
+const textEncoder = new TextEncoder();
+
+type PartitionEntryInput = {
+  type: number;
+  subtype: number;
+  offset: number;
+  size: number;
+  label: string;
+};
+
+function makePartitionEntry(entry: PartitionEntryInput): Uint8Array {
+  const buffer = new Uint8Array(32).fill(0xff);
+  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  view.setUint16(0, 0x50aa, true);
+  view.setUint8(2, entry.type);
+  view.setUint8(3, entry.subtype);
+  view.setUint32(4, entry.offset, true);
+  view.setUint32(8, entry.size, true);
+
+  const labelBytes = textEncoder.encode(entry.label);
+  const labelLen = Math.min(labelBytes.length, 16);
+  buffer.set(labelBytes.subarray(0, labelLen), 12);
+  if (labelLen < 16) {
+    buffer.fill(0x00, 12 + labelLen, 28);
+  }
+
+  return buffer;
+}
+
+function makePartitionTerminator(): Uint8Array {
+  const buffer = new Uint8Array(32);
+  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  view.setUint16(0, 0xffff, true);
+  return buffer;
+}
+
+function createPartitionTable(entries: Uint8Array[]): Uint8Array {
+  const table = new Uint8Array(PARTITION_TABLE_SIZE).fill(0xff);
+  let offset = 0;
+  for (const entry of entries) {
+    table.set(entry, offset);
+    offset += 32;
+  }
+  return table;
+}
+
+const mockPartitionTable = createPartitionTable([
+  makePartitionEntry({ type: 0x01, subtype: 0x02, offset: 0x9000, size: 0x6000, label: 'nvs' }),
+  makePartitionEntry({ type: 0x00, subtype: 0x00, offset: 0x10000, size: 0x100000, label: 'app0' }),
+  makePartitionTerminator(),
+]);
 
 export async function requestSerialPort(_filters?: SerialPortFilter[]) {
   const port = {
@@ -117,8 +170,13 @@ export function createEsptoolClient(options: EsptoolOptions): EsptoolClient {
 
   const loader: MockLoader = {
     flashId: async () => 0x1640ef,
-    readFlash: async (_offset, length) => new Uint8Array(length),
-    readRegister: async (address) => address ^ 0xa5a5a5a5,
+    readFlash: async (offset, length) => {
+      if (offset === PARTITION_TABLE_OFFSET) {
+        return mockPartitionTable.subarray(0, length);
+      }
+      return new Uint8Array(length);
+    },
+    readRegister: async (address) => (address ^ 0xa5a5a5a5) >>> 0,
     writeRegister: async () => {
       return;
     },

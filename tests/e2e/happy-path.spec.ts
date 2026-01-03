@@ -62,8 +62,11 @@ test('Disconnect happy path', async ({ page }) => {
 test('Navigation unlock', async ({ page }) => {
   await connectHappyPath(page);
 
+  await page.getByText('Flash Tools', { exact: true }).click();
+  await expect(page.getByTestId('tool-integrity-card')).toBeVisible();
+
   await page.getByText('Partitions', { exact: true }).click();
-  await expect(page.getByText('No partition data yet')).toBeVisible();
+  await expect(page.locator('.partition-map')).toBeVisible();
 });
 
 test('Security facts render', async ({ page }) => {
@@ -97,4 +100,62 @@ test('MD5 error path', async ({ page }) => {
   await toolCard.getByTestId('tool-integrity-run').click();
 
   await expect(toolCard).toContainText('MD5 calculation failed');
+});
+
+test('Language toggle', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('espconnect-language', 'fr');
+  });
+  await page.goto('/?e2e=1');
+
+  const connectButton = page.getByTestId('connect-btn');
+  await expect(connectButton).toContainText('Connecter');
+
+  await page.locator('.language-toggle-btn').click();
+  await page.getByText('English', { exact: true }).click();
+  await expect(connectButton).toContainText('Connect');
+});
+
+test('Flash tools preset applies offset', async ({ page }) => {
+  await connectHappyPath(page);
+
+  await openFlashTools(page);
+  const presetSelect = page.getByTestId('flash-preset-select');
+  await presetSelect.scrollIntoViewIfNeeded();
+  await presetSelect.click({ force: true });
+  await page.getByRole('option', { name: /0x10000/ }).click();
+
+  const offsetInput = page.getByTestId('flash-offset-input').locator('input');
+  await expect(offsetInput).toHaveValue('0x10000');
+});
+
+test('Register read/write', async ({ page }) => {
+  await connectHappyPath(page);
+
+  await openFlashTools(page);
+  const registerCard = page.getByTestId('tool-register-card');
+  await page.getByTestId('register-address-input').locator('input').fill('0x3FF00044');
+  await page.getByTestId('register-read-btn').click();
+
+  await expect(registerCard).toContainText('Read 0x3FF00044');
+  await expect(registerCard).toContainText('0x9A55A5E1');
+
+  await page.getByTestId('register-value-input').locator('input').fill('0x1234');
+  await page.getByTestId('register-write-btn').click();
+
+  await expect(registerCard).toContainText('Wrote 0x00001234');
+});
+
+test('Partitions table shows rows', async ({ page }) => {
+  await connectHappyPath(page);
+
+  await page.getByText('Partitions', { exact: true }).click();
+  await expect.poll(async () => page.locator('.partition-table-row').count()).toBeGreaterThan(2);
+});
+
+test('Session log updates', async ({ page }) => {
+  await connectHappyPath(page);
+
+  await page.getByText('Session Log', { exact: true }).click();
+  await expect(page.locator('.log-output')).toContainText('ESPConnect');
 });
