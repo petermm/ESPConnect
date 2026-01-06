@@ -264,7 +264,8 @@
         <div class="progress-dialog__label">
           {{ flashProgressDialog.label || t('flashFirmware.progress.preparingFlash') }}
         </div>
-        <v-progress-linear :model-value="flashProgressDialog.value" height="24" color="primary" rounded striped />
+        <v-progress-linear :model-value="flashProgressDialog.value" height="24" color="primary" rounded striped
+          :indeterminate="flashProgressDialog.indeterminate === true" />
       </v-card-text>
       <v-card-actions class="progress-dialog__actions">
         <v-spacer />
@@ -369,7 +370,7 @@ const props = withDefaults(
     partitionOptions: () => [],
     selectedPartition: null,
     integrityPartition: null,
-    flashProgressDialog: () => ({ visible: false, value: 0, label: '' }),
+    flashProgressDialog: () => ({ visible: false, value: 0, label: '', indeterminate: false }),
     downloadProgress: () => ({ visible: false, value: 0, label: '' }),
   },
 );

@@ -3947,7 +3947,12 @@ const connected = ref(false);
 const busy = ref(false);
 const flashInProgress = ref(false);
 const flashProgress = ref(0);
-const flashProgressDialog = reactive<ProgressDialogState>({ visible: false, value: 0, label: '' });
+const flashProgressDialog = reactive<ProgressDialogState>({
+  visible: false,
+  value: 0,
+  label: '',
+  indeterminate: false,
+});
 const flashCancelRequested = ref(false);
 const selectedBaud = ref<BaudRate>(DEFAULT_FLASH_BAUD as BaudRate);
 const baudrateOptions = SUPPORTED_BAUDRATES;
@@ -6383,6 +6388,7 @@ async function flashFirmware() {
   flashCancelRequested.value = false;
   flashProgressDialog.visible = true;
   flashProgressDialog.value = 0;
+  flashProgressDialog.indeterminate = false;
   flashProgressDialog.label = `Preparing ${firmwareLabel} @ ${flashBaudLabel}...`;
 
   appendLog(`Flashing ${firmwareLabel} at 0x${offsetNumber.toString(16)}...`);
@@ -6440,6 +6446,7 @@ async function flashFirmware() {
     flashProgressDialog.visible = false;
     flashProgressDialog.value = 0;
     flashProgressDialog.label = '';
+    flashProgressDialog.indeterminate = false;
   }
 }
 
@@ -6467,6 +6474,7 @@ function resetMaintenanceState() {
   flashProgressDialog.visible = false;
   flashProgressDialog.value = 0;
   flashProgressDialog.label = '';
+  flashProgressDialog.indeterminate = false;
   flashCancelRequested.value = false;
   downloadProgress.visible = false;
   downloadProgress.value = 0;
@@ -7039,32 +7047,32 @@ function handleSelectIntegrityPartition(value: PartitionOptionValue) {
 async function handleEraseFlash(payload = { mode: 'full' }) {
   const loaderInstance = loader.value;
   if (!loaderInstance) {
-    flashReadStatus.value = 'Connect to a device first.';
+    flashReadStatus.value = t('flashFirmware.backup.status.connectFirst');
     flashReadStatusType.value = 'warning';
     return;
   }
   const eraseFlashFn = (loaderInstance as ESPLoader & { eraseFlash?: () => Promise<void> }).eraseFlash;
   if (!eraseFlashFn) {
     flashReadStatusType.value = 'warning';
-    flashReadStatus.value = 'Full flash erase is not supported by this loader.';
+    flashReadStatus.value = t('flashFirmware.backup.status.unsupported');
     return;
   }
   if (payload?.mode !== 'full') {
     flashReadStatusType.value = 'warning';
-    flashReadStatus.value = 'Selective erase is not yet supported in this interface.';
+    flashReadStatus.value = t('flashFirmware.backup.status.selectiveUnsupported');
     return;
   }
 
   const confirmErase = await showConfirmation({
-    title: 'Erase Entire Flash',
-    message: 'Erase the entire flash? This removes all data and cannot be undone.',
-    confirmText: 'Erase Flash',
-    cancelText: 'Cancel',
+    title: t('flashFirmware.backup.eraseConfirmTitle'),
+    message: t('flashFirmware.backup.eraseConfirmMessage'),
+    confirmText: t('flashFirmware.backup.eraseConfirmButton'),
+    cancelText: t('dialogs.cancel'),
     destructive: true,
   });
   if (!confirmErase) {
     flashReadStatusType.value = 'info';
-    flashReadStatus.value = 'Flash erase cancelled.';
+    flashReadStatus.value = t('flashFirmware.backup.status.cancelled');
     appendLog('Flash erase cancelled by user.', '[ESPConnect-Warn]');
     return;
   }
@@ -7072,16 +7080,26 @@ async function handleEraseFlash(payload = { mode: 'full' }) {
   try {
     maintenanceBusy.value = true;
     flashReadStatusType.value = 'info';
-    flashReadStatus.value = 'Erasing entire flash...';
+    flashReadStatus.value = t('flashFirmware.backup.status.erasing');
+    flashProgressDialog.visible = true;
+    flashProgressDialog.value = 0;
+    flashProgressDialog.indeterminate = true;
+    flashProgressDialog.label = t('flashFirmware.progress.erasingFlash');
     await runLoaderOperation(() => eraseFlashFn.call(loaderInstance));
     flashReadStatusType.value = 'success';
-    flashReadStatus.value = 'Flash erase complete.';
+    flashReadStatus.value = t('flashFirmware.backup.status.complete');
     appendLog('Entire flash erased.', '[ESPConnect-Debug]');
   } catch (error) {
     flashReadStatusType.value = 'error';
-    flashReadStatus.value = `Erase failed: ${formatErrorMessage(error)}`;
+    flashReadStatus.value = t('flashFirmware.backup.status.failed', {
+      error: formatErrorMessage(error),
+    });
   } finally {
     maintenanceBusy.value = false;
+    flashProgressDialog.visible = false;
+    flashProgressDialog.value = 0;
+    flashProgressDialog.label = '';
+    flashProgressDialog.indeterminate = false;
   }
 }
 

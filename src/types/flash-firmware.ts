@@ -4,6 +4,7 @@ export type ProgressDialogState = {
   visible: boolean;
   value: number;
   label: string;
+  indeterminate?: boolean;
 };
 
 export type FlashOffsetPreset = {
