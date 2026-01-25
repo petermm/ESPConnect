@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.1.7
+## 1.1.8-preview
 
+## 1.1.7
 ### Fixed
 - Serial Monitor now appends a newline to every command sent.
 
