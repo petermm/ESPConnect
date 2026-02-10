@@ -22,6 +22,35 @@
               </div>
             </div>
           </div>
+
+
+          <v-card v-if="hasLaMachineConfiguration" elevation="0" variant="tonal" class="device-nvs-card">
+            <v-card-title class="d-flex align-center">
+              <v-icon class="me-2">mdi-cog-outline</v-icon>
+              {{ t('deviceInfo.nvs.title') }}
+            </v-card-title>
+            <v-card-text>
+              <div class="text-body-2 text-medium-emphasis">
+                {{ t('deviceInfo.nvs.subtitle') }}
+              </div>
+              <div class="mt-3">
+                <div class="text-caption text-medium-emphasis">
+                  {{ t('deviceInfo.nvs.keyLabel') }}
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                  <v-chip size="small" variant="outlined" color="primary">la_machine</v-chip>
+                  <v-chip size="small" variant="outlined" color="primary">configuration</v-chip>
+                </div>
+                <div v-if="configurationEntry?.valuePreview" class="mt-3">
+                  <div class="text-caption text-medium-emphasis">
+                    {{ t('deviceInfo.nvs.valuePreview') }}
+                  </div>
+                  <code class="device-nvs-card__value">{{ configurationEntry.valuePreview }}</code>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+          
           <v-card class="device-summary-card" elevation="0" variant="flat" color="primary">
             <v-card-text class="device-summary-card__content">
               <div class="device-summary">
@@ -135,15 +164,18 @@ import { useI18n } from 'vue-i18n';
 import DisconnectedState from './DisconnectedState.vue';
 import { PRIMARY_FACTS, getFactLabelKey } from '../constants/deviceFacts';
 import type { DeviceDetails, DeviceFact, DeviceFactGroup } from '../types/device-details';
+import type { NvsParseResult } from '../lib/nvs/nvsParser';
 
 type DeviceDetailsWrapper = { value: DeviceDetails | null };
 
 const props = withDefaults(
   defineProps<{
     chipDetails?: DeviceDetails | DeviceDetailsWrapper | null;
+    nvsResult?: NvsParseResult | null;
   }>(),
   {
     chipDetails: null,
+    nvsResult: null,
   },
 );
 
@@ -216,6 +248,13 @@ const featurePreview = computed<string[]>(() => {
   const limit = 6;
   return details.value?.features.slice(0, limit) ?? [];
 });
+
+const configurationEntry = computed(() => {
+  const entries = props.nvsResult?.entries ?? [];
+  return entries.find(entry => entry.namespace === 'la_machine' && entry.key === 'configuration') ?? null;
+});
+
+const hasLaMachineConfiguration = computed(() => Boolean(configurationEntry.value));
 
 const translateFactLabel = (fact: DeviceFact): string => {
   const key = fact.translationKey ?? getFactLabelKey(fact.label);
@@ -387,6 +426,19 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
       color-mix(in srgb, var(--v-theme-primary) 10%, transparent) 65%),
     linear-gradient(150deg, rgba(255, 255, 255, 0.04), transparent);
   margin-bottom: clamp(16px, 3vw, 28px);
+}
+
+.device-nvs-card {
+  border-radius: 18px;
+  margin-bottom: clamp(16px, 3vw, 28px);
+  border: 1px solid color-mix(in srgb, var(--v-theme-primary) 12%, transparent);
+}
+
+.device-nvs-card__value {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--v-theme-surface) 88%, transparent);
 }
 
 .device-summary-card__content {

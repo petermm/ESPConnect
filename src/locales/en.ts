@@ -130,6 +130,12 @@ const en = {
     },
     crystal: 'Crystal {crystal}',
     unknown: 'Unknown',
+    nvs: {
+      title: 'La Machine Configuration',
+      subtitle: 'NVS contains the la_machine configuration entry.',
+      keyLabel: 'Namespace and key',
+      valuePreview: 'Value preview',
+    },
     facts: {
       groups: {
         package: 'Package & Revision',

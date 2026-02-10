@@ -130,6 +130,12 @@ const fr = {
     },
     crystal: 'Cadence {crystal}',
     unknown: 'Inconnue',
+    nvs: {
+      title: 'Configuration la machine',
+      subtitle: 'Le NVS contient l’entrée de configuration la_machine.',
+      keyLabel: 'Espace de noms et clé',
+      valuePreview: 'Aperçu de la valeur',
+    },
     facts: {
       groups: {
         package: 'Version et révision',

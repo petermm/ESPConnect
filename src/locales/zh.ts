@@ -130,6 +130,12 @@ const zh = {
     },
     crystal: '晶振 {crystal}',
     unknown: '未知',
+    nvs: {
+      title: '设备配置',
+      subtitle: 'NVS 中包含 la_machine 的配置项。',
+      keyLabel: '命名空间与键',
+      valuePreview: '值预览',
+    },
     facts: {
       groups: {
         package: '封装与修订',

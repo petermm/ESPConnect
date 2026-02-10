@@ -102,7 +102,7 @@
           </v-alert>
           <v-window v-model="activeTab" class="app-tab-content">
             <v-window-item value="info">
-              <DeviceInfoTab :chip-details="chipDetails" />
+              <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" />
             </v-window-item>
 
             <v-window-item value="partitions">
