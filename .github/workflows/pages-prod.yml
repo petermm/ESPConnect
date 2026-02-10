@@ -1,9 +1,10 @@
 name: Deploy Production to GitHub Pages
 
 on:
+  pull_request:
+    branches: [main]
   push:
-    tags:
-      - "v*"
+    branches: [main]
 
 concurrency:
   group: pages-prod
