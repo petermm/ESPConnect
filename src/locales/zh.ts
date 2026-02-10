@@ -135,6 +135,15 @@ const zh = {
       subtitle: 'NVS 中包含 la_machine 的配置项。',
       keyLabel: '命名空间与键',
       valuePreview: '值预览',
+      selfTestResultEmpty: '（空）',
+      fields: {
+        closedDuty: '关闭占空比',
+        interruptDuty: '中断占空比',
+        selfTestTime: '自检时间',
+        selfTestBattery: '自检电池',
+        selfTestReported: '自检已上报',
+        selfTestResult: '自检结果',
+      },
     },
     facts: {
       groups: {

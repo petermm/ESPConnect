@@ -41,7 +41,16 @@
                   <v-chip size="small" variant="outlined" color="primary">la_machine</v-chip>
                   <v-chip size="small" variant="outlined" color="primary">configuration</v-chip>
                 </div>
-                <div v-if="configurationEntry?.valuePreview" class="mt-3">
+                <div v-if="decodedConfiguration" class="device-nvs-grid mt-3">
+                  <div v-for="(field, index) in decodedConfiguration.fields" :key="field.labelKey"
+                    class="device-nvs-field" :class="{ 'device-nvs-field--full': index === decodedConfiguration.fields.length - 1 }">
+                    <div class="text-caption text-medium-emphasis">
+                      {{ t(`deviceInfo.nvs.fields.${field.labelKey}`) }}
+                    </div>
+                    <div class="device-nvs-field__value">{{ field.value }}</div>
+                  </div>
+                </div>
+                <div v-else-if="configurationEntry?.valuePreview" class="mt-3">
                   <div class="text-caption text-medium-emphasis">
                     {{ t('deviceInfo.nvs.valuePreview') }}
                   </div>
@@ -249,9 +258,60 @@ const featurePreview = computed<string[]>(() => {
   return details.value?.features.slice(0, limit) ?? [];
 });
 
+type DecodedConfigField = {
+  labelKey: string;
+  value: string;
+};
+
+type DecodedConfig = {
+  fields: DecodedConfigField[];
+  text: string;
+};
+
+const decodeLaMachineConfig = (data: Uint8Array): DecodedConfig | undefined => {
+  if (data.length < 15) return undefined;
+  const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const closedDuty = dv.getUint16(0, false);
+  const interruptDuty = dv.getUint16(2, false);
+  const selfTestTime = dv.getBigUint64(4, false);
+  const selfTestBattery = dv.getUint16(12, false);
+  const selfTestReported = data[14] !== 0;
+  const selfTestResult = data.subarray(15);
+  let resultStr: string;
+  if (selfTestResult.length === 0) {
+    resultStr = t('deviceInfo.nvs.selfTestResultEmpty');
+  } else {
+    try {
+      resultStr = new TextDecoder('utf-8', { fatal: true }).decode(selfTestResult);
+    } catch {
+      resultStr = Array.from(selfTestResult)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+  }
+  const fields = [
+    { labelKey: 'closedDuty', value: `${closedDuty}` },
+    { labelKey: 'interruptDuty', value: `${interruptDuty}` },
+    { labelKey: 'selfTestTime', value: selfTestTime.toString() },
+    { labelKey: 'selfTestBattery', value: `${selfTestBattery}` },
+    { labelKey: 'selfTestReported', value: `${selfTestReported}` },
+    { labelKey: 'selfTestResult', value: resultStr },
+  ];
+  const text = fields.map((f) => `${f.labelKey}: ${f.value}`).join('\n');
+  return { fields, text };
+};
+
 const configurationEntry = computed(() => {
   const entries = props.nvsResult?.entries ?? [];
   return entries.find(entry => entry.namespace === 'la_machine' && entry.key === 'configuration') ?? null;
+});
+
+const decodedConfiguration = computed(() => {
+  const entryValue = configurationEntry.value?.value;
+  if (entryValue instanceof Uint8Array) {
+    return decodeLaMachineConfig(entryValue);
+  }
+  return undefined;
 });
 
 const hasLaMachineConfiguration = computed(() => Boolean(configurationEntry.value));
@@ -439,6 +499,30 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
   padding: 6px 10px;
   border-radius: 10px;
   background: color-mix(in srgb, var(--v-theme-surface) 88%, transparent);
+}
+
+.device-nvs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 16px;
+}
+
+.device-nvs-field {
+  display: grid;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--v-theme-surface) 94%, transparent);
+}
+
+.device-nvs-field--full {
+  grid-column: 1 / -1;
+}
+
+.device-nvs-field__value {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 92%, transparent);
+  word-break: break-word;
 }
 
 .device-summary-card__content {

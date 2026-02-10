@@ -135,6 +135,15 @@ const fr = {
       subtitle: 'Le NVS contient l’entrée de configuration la_machine.',
       keyLabel: 'Espace de noms et clé',
       valuePreview: 'Aperçu de la valeur',
+      selfTestResultEmpty: '(vide)',
+      fields: {
+        closedDuty: 'Seuil fermé',
+        interruptDuty: 'Seuil interruption',
+        selfTestTime: 'Temps d’auto-test',
+        selfTestBattery: 'Batterie auto-test',
+        selfTestReported: 'Auto-test signalé',
+        selfTestResult: 'Résultat auto-test',
+      },
     },
     facts: {
       groups: {

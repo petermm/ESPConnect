@@ -135,6 +135,15 @@ const en = {
       subtitle: 'NVS contains the la_machine configuration entry.',
       keyLabel: 'Namespace and key',
       valuePreview: 'Value preview',
+      selfTestResultEmpty: '(empty)',
+      fields: {
+        closedDuty: 'Closed duty',
+        interruptDuty: 'Interrupt duty',
+        selfTestTime: 'Self-test time',
+        selfTestBattery: 'Self-test battery',
+        selfTestReported: 'Self-test reported',
+        selfTestResult: 'Self-test result',
+      },
     },
     facts: {
       groups: {
