@@ -6318,6 +6318,7 @@ async function connect(port?: SerialPort) {
       const loaderInstance = loader.value;
       const partitions = await runLoaderOperation(() => readPartitionTable(loaderInstance, undefined, undefined, appendLog));
       partitionTable.value = partitions;
+      handleReadNvs();
       appMetadataLoaded.value = false;
     } else {
       partitionTable.value = [];

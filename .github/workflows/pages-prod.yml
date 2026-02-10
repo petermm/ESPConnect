@@ -47,6 +47,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./dist
+          destination_dir: preview
           keep_files: true
           enable_jekyll: false
           commit_message: "Deploy production ${{ github.ref_name }}"
