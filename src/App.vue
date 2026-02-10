@@ -29,7 +29,7 @@
     <v-app-bar app :elevation="8">
       <div class="status-actions">
         <v-btn color="primary" variant="outlined" density="comfortable"
-          :disabled="!serialSupported || connected || busy" @click="connect" data-testid="connect-btn">
+          :disabled="!serialSupported || connected || busy" @click="connect()" data-testid="connect-btn">
           <v-icon start>mdi-usb-flash-drive</v-icon>
           {{ t('actions.connect') }}
         </v-btn>
@@ -40,6 +40,9 @@
         </v-btn>
         <v-select v-model="selectedBaud" :items="baudrateOptions" :label="t('forms.baudRate')" density="compact"
           variant="outlined" hide-details class="status-select"
+          :disabled="busy || flashInProgress || maintenanceBusy || baudChangeBusy || monitorActive" />
+        <v-switch v-model="autoConnectEnabled" :label="t('forms.autoConnect')" density="compact" hide-details
+          color="primary" class="status-toggle"
           :disabled="busy || flashInProgress || maintenanceBusy || baudChangeBusy || monitorActive" />
         <v-menu offset-y>
           <template #activator="{ props }">
@@ -3960,6 +3963,7 @@ const flashCancelRequested = ref(false);
 const ERASE_CANCEL_MESSAGE = 'Flash erase cancelled by user';
 let eraseFillBlock: number[] | null = null;
 const selectedBaud = ref<BaudRate>(DEFAULT_FLASH_BAUD as BaudRate);
+const autoConnectEnabled = ref(true);
 const baudrateOptions = SUPPORTED_BAUDRATES;
 const flashOffset = ref('0x0');
 const eraseFlash = ref(false);
@@ -5671,7 +5675,43 @@ function clearMonitorOutput() {
 }
 
 // React to browser-level serial disconnect events and clean up connections.
+type SerialConnectEvent = Event & { port?: SerialPort; target?: SerialPort | { port?: SerialPort } };
 type SerialDisconnectEvent = Event & { port?: SerialPort; target?: { port?: SerialPort } };
+
+function isSerialPort(value: unknown): value is SerialPort {
+  return Boolean(value && typeof (value as SerialPort).open === 'function');
+}
+
+function resolveSerialEventPort(event: SerialConnectEvent): SerialPort | null {
+  const directTarget = event?.target;
+  if (isSerialPort(directTarget)) {
+    return directTarget;
+  }
+  const targetPort =
+    directTarget && typeof directTarget === 'object' ? (directTarget as { port?: SerialPort }).port : null;
+  const candidate = event?.port ?? targetPort ?? null;
+  return isSerialPort(candidate) ? candidate : null;
+}
+
+async function onSerialConnectEvent(event: SerialConnectEvent) {
+  if (!autoConnectEnabled.value || busy.value || connected.value || flashInProgress.value || maintenanceBusy.value) {
+    return;
+  }
+  const port = resolveSerialEventPort(event);
+  if (!port) {
+    appendLog('Auto-connect ignored: invalid serial port event.', '[ESPConnect-Warn]');
+    return;
+  }
+  try {
+    await connect(port);
+  } catch (error) {
+    appendLog(`Auto-connect failed (${formatErrorMessage(error)}).`, '[ESPConnect-Warn]');
+  }
+}
+
+function handleSerialConnectEvent(event: Event) {
+  void onSerialConnectEvent(event as SerialConnectEvent);
+}
 
 async function onSerialDisconnectEvent(event: SerialDisconnectEvent) {
   const eventPort = event?.target?.port ?? event?.port ?? null;
@@ -5945,7 +5985,7 @@ async function disconnectTransport() {
 }
 
 // Open a serial connection, handshake the bootloader, and load device metadata.
-async function connect() {
+async function connect(port?: SerialPort) {
   if (!serialSupported) {
     appendLog('Web Serial API not available in this browser.');
     return;
@@ -5973,8 +6013,12 @@ async function connect() {
     busyDialogMessage.value = '';
     showBootDialog.value = false;
     showGeneralErrorDialog.value = false;
-    // currentPort.value = await requestSerialPort(SUPPORTED_VENDORS);
-    currentPort.value = await requestSerialPort();
+    const resolvedPort = isSerialPort(port) ? port : null;
+    const requestedPort = resolvedPort ?? await requestSerialPort();
+    if (!requestedPort) {
+      throw new Error('Serial port unavailable.');
+    }
+    currentPort.value = requestedPort;
     connectDialogTimer = setTimeout(() => {
       connectDialog.visible = true;
     }, TIMEOUT_CONNECT);
@@ -7420,6 +7464,7 @@ function handleBeforeUnload() {
 onMounted(() => {
   window.addEventListener('beforeunload', handleBeforeUnload);
   if ('serial' in navigator && typeof navigator.serial?.addEventListener === 'function') {
+    navigator.serial.addEventListener('connect', handleSerialConnectEvent);
     navigator.serial.addEventListener('disconnect', handleSerialDisconnectEvent);
   }
 });
@@ -7427,6 +7472,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
   if ('serial' in navigator && typeof navigator.serial?.removeEventListener === 'function') {
+    navigator.serial.removeEventListener('connect', handleSerialConnectEvent);
     navigator.serial.removeEventListener('disconnect', handleSerialDisconnectEvent);
   }
   disconnectTransport();
@@ -7497,6 +7543,10 @@ onBeforeUnmount(() => {
 .status-select {
   min-width: 180px;
   max-width: 220px;
+}
+
+.status-toggle {
+  min-width: 180px;
 }
 
 .confirmation-message {
