@@ -1,4 +1,4 @@
-﻿const zh = {
+const zh = {
   app: {
     title: 'ESPConnect',
     sectionsLabel: '板块',
@@ -28,6 +28,7 @@
   },
   forms: {
     baudRate: '波特率',
+    autoConnect: '自动连接',
   },
   tooltips: {
     higherBaud: '可以使用更高的波特率',

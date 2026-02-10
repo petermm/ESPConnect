@@ -1,4 +1,4 @@
-﻿const en = {
+const en = {
   app: {
     title: 'ESPConnect',
     sectionsLabel: 'Sections',
@@ -28,6 +28,7 @@
   },
   forms: {
     baudRate: 'Baud rate',
+    autoConnect: 'Auto-connect',
   },
   tooltips: {
     higherBaud: 'A higher baudrate can be used',

@@ -1,4 +1,4 @@
-﻿const fr = {
+const fr = {
   app: {
     title: 'ESPConnect',
     sectionsLabel: 'Sections',
@@ -28,6 +28,7 @@
   },
   forms: {
     baudRate: 'Cadence',
+    autoConnect: 'Connexion automatique',
   },
   tooltips: {
     higherBaud: 'Une vitesse plus rapide peut être utilisée.',
