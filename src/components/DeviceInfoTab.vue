@@ -24,7 +24,7 @@
           </div>
 
 
-          <v-card v-if="hasLaMachineConfiguration" elevation="0" variant="tonal" class="device-nvs-card">
+          <v-card elevation="0" variant="tonal" class="device-nvs-card">
             <v-card-title class="d-flex align-center">
               <template v-if="kioskMode">
                 <div class="la-machine-logo">la machine</div>
