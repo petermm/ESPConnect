@@ -3978,6 +3978,7 @@ const { t } = useI18n();
 const kioskMode =
   typeof window !== 'undefined' &&
   (() => {
+    return true;
     const params = new URLSearchParams(window.location.search);
     const kiosk = params.get('kiosk');
     if (kiosk === '1' || kiosk === 'true' || params.has('kiosk')) {
