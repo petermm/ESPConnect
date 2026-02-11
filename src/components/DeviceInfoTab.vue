@@ -55,6 +55,29 @@
                 </div>
               </div>
               <v-divider class="my-4" />
+              <div class="device-nvs-card__flash">
+                <div class="text-caption text-medium-emphasis mb-2">
+                  {{ t('deviceInfo.nvs.flashTitle') }}
+                </div>
+                <div class="device-nvs-card__flash-buttons">
+                  <v-btn class="device-nvs-card__flash-btn" color="primary" variant="tonal" size="large"
+                    :disabled="busy" @click="emit('flash-la-machine', 'retail')">
+                    <v-icon start>mdi-flash</v-icon>
+                    {{ t('deviceInfo.nvs.flashRetail') }}
+                  </v-btn>
+                  <v-btn class="device-nvs-card__flash-btn" color="primary" variant="tonal" size="large"
+                    :disabled="busy" @click="emit('flash-la-machine', '4mb')">
+                    <v-icon start>mdi-flash</v-icon>
+                    {{ t('deviceInfo.nvs.flash4mb') }}
+                  </v-btn>
+                  <v-btn class="device-nvs-card__flash-btn" color="primary" variant="tonal" size="large"
+                    :disabled="busy" @click="emit('flash-la-machine', 'proto')">
+                    <v-icon start>mdi-flash</v-icon>
+                    {{ t('deviceInfo.nvs.flashProto') }}
+                  </v-btn>
+                </div>
+              </div>
+              <v-divider class="my-4" />
               <div class="device-nvs-card__factory">
                 <v-btn class="device-nvs-card__factory-btn" color="error" variant="tonal" size="large"
                   :disabled="busy" @click="emit('factory-reset')">
@@ -181,6 +204,7 @@ import type { DeviceDetails, DeviceFact, DeviceFactGroup } from '../types/device
 import type { NvsParseResult } from '../lib/nvs/nvsParser';
 
 type DeviceDetailsWrapper = { value: DeviceDetails | null };
+type LaMachineFirmwareVariant = 'retail' | '4mb' | 'proto';
 
 const props = withDefaults(
   defineProps<{
@@ -199,6 +223,7 @@ const emit = defineEmits<{
   (e: 'disconnect-reset'): void;
   (e: 'connect'): void;
   (e: 'factory-reset'): void;
+  (e: 'flash-la-machine', variant: LaMachineFirmwareVariant): void;
 }>();
 
 const { t } = useI18n();
@@ -515,6 +540,25 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
 
 .device-nvs-card__reset-btn {
   min-width: min(520px, 100%);
+  width: 100%;
+  text-transform: none;
+}
+
+.device-nvs-card__flash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.device-nvs-card__flash-buttons {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.device-nvs-card__flash-btn {
   width: 100%;
   text-transform: none;
 }

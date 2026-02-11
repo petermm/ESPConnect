@@ -103,7 +103,8 @@
           <v-window v-model="activeTab" class="app-tab-content">
             <v-window-item value="info">
               <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" :busy="busy || maintenanceBusy"
-                @disconnect-reset="disconnectFromUi" @connect="lookForLaMachine" @factory-reset="factoryResetLaMachine" />
+                @disconnect-reset="disconnectFromUi" @connect="lookForLaMachine" @factory-reset="factoryResetLaMachine"
+                @flash-la-machine="flashLaMachineFirmware" />
             </v-window-item>
 
             <v-window-item value="partitions">
@@ -6510,6 +6511,130 @@ async function factoryResetLaMachine() {
     flashProgressDialog.label = '';
     flashProgressDialog.indeterminate = false;
     flashCancelRequested.value = false;
+  }
+}
+
+type LaMachineFirmwareVariant = 'retail' | '4mb' | 'proto';
+
+const LA_MACHINE_FIRMWARE_VARIANTS: Record<
+  LaMachineFirmwareVariant,
+  { assetPath: string; labelKey: 'deviceInfo.nvs.flashRetail' | 'deviceInfo.nvs.flash4mb' | 'deviceInfo.nvs.flashProto' }
+> = {
+  retail: { assetPath: 'assets/firmware/la_machine.bin', labelKey: 'deviceInfo.nvs.flashRetail' },
+  '4mb': { assetPath: 'assets/firmware/la_machine_4mb.bin', labelKey: 'deviceInfo.nvs.flash4mb' },
+  proto: { assetPath: 'assets/firmware/la_machine_proto.bin', labelKey: 'deviceInfo.nvs.flashProto' },
+};
+
+function getPublicAssetUrl(assetPath: string) {
+  const base = import.meta.env.BASE_URL || '/';
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  const normalizedPath = assetPath.startsWith('/') ? assetPath.slice(1) : assetPath;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+async function flashLaMachineFirmware(variant: LaMachineFirmwareVariant) {
+  const loaderInstance = loader.value;
+  if (!loaderInstance) {
+    showToast(t('flashFirmware.backup.status.connectFirst'), { color: 'warning' });
+    return;
+  }
+  if (flashInProgress.value || busy.value || maintenanceBusy.value) return;
+
+  const selection = LA_MACHINE_FIRMWARE_VARIANTS[variant];
+  const firmwareLabel = t(selection.labelKey);
+  const offsetNumber = 0;
+  const confirmFlash = await showConfirmation({
+    title: t('deviceInfo.nvs.flashConfirmTitle'),
+    message: t('deviceInfo.nvs.flashConfirmMessage', { label: firmwareLabel }),
+    confirmText: t('deviceInfo.nvs.flashConfirmButton'),
+    cancelText: t('dialogs.cancel'),
+    destructive: true,
+  });
+  if (!confirmFlash) {
+    return;
+  }
+
+  const activeBaudRaw =
+    transport.value?.baudrate ||
+    currentBaud.value ||
+    selectedBaud.value ||
+    DEFAULT_ROM_BAUD;
+  const flashBaud = Number.isFinite(activeBaudRaw) ? activeBaudRaw : DEFAULT_ROM_BAUD;
+  const flashBaudLabel = flashBaud.toLocaleString() + ' bps';
+
+  flashInProgress.value = true;
+  busy.value = true;
+  flashProgress.value = 0;
+  flashCancelRequested.value = false;
+  flashProgressDialog.visible = true;
+  flashProgressDialog.value = 0;
+  flashProgressDialog.indeterminate = false;
+  flashProgressDialog.label = t('deviceInfo.nvs.flashStatusDownloading', { label: firmwareLabel });
+
+  try {
+    const firmwareUrl = getPublicAssetUrl(selection.assetPath);
+    const response = await fetch(firmwareUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to load firmware (${response.status})`);
+    }
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const startTime = performance.now();
+
+    await runLoaderOperation(async () => {
+      await loaderInstance.flashData(
+        bytes.buffer,
+        (written, total) => {
+          if (flashCancelRequested.value) {
+            throw new Error('Flash cancelled by user');
+          }
+          const pct = total ? Math.floor((written / total) * 100) : 0;
+          const clamped = Math.min(100, Math.max(0, pct));
+          flashProgress.value = clamped;
+          flashProgressDialog.visible = true;
+          flashProgressDialog.value = clamped;
+          const writtenLabel = written.toLocaleString();
+          const totalLabel = total ? total.toLocaleString() : '';
+          flashProgressDialog.label = total
+            ? t('deviceInfo.nvs.flashStatusFlashingTotal', {
+              label: firmwareLabel,
+              written: writtenLabel,
+              total: totalLabel,
+              baud: flashBaudLabel,
+            })
+            : t('deviceInfo.nvs.flashStatusFlashing', { label: firmwareLabel, written: writtenLabel, baud: flashBaudLabel });
+        },
+        offsetNumber,
+        true,
+      );
+    });
+
+    flashProgressDialog.value = 100;
+    flashProgressDialog.label = t('deviceInfo.nvs.flashStatusFinalizing');
+    await esptoolClient.value?.syncWithStub();
+    const elapsedSeconds = ((performance.now() - startTime) / 1000).toFixed(1);
+    showToast(t('deviceInfo.nvs.flashComplete', { label: firmwareLabel, seconds: elapsedSeconds }), {
+      color: 'success',
+      timeout: 6000,
+    });
+    appendLog(`Flashed ${firmwareLabel} at 0x${offsetNumber.toString(16).toUpperCase()} in ${elapsedSeconds}s @ ${flashBaudLabel}.`, '[ESPConnect-Debug]');
+  } catch (error) {
+    const message = formatErrorMessage(error);
+    const cancelled = message === 'Flash cancelled by user';
+    showToast(
+      cancelled ? t('flashFirmware.backup.status.cancelled') : t('flashFirmware.backup.status.failed', { error: message }),
+      { color: cancelled ? 'warning' : 'error', timeout: 6000 },
+    );
+  } finally {
+    flashProgress.value = 0;
+    flashInProgress.value = false;
+    flashCancelRequested.value = false;
+    flashProgressDialog.visible = false;
+    flashProgressDialog.value = 0;
+    flashProgressDialog.label = '';
+    flashProgressDialog.indeterminate = false;
+    await refreshPartitionTable(loaderInstance);
+    busy.value = false;
   }
 }
 
