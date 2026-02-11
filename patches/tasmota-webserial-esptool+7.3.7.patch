@@ -1,0 +1,97 @@
+diff --git a/node_modules/tasmota-webserial-esptool/dist/esp_loader.js b/node_modules/tasmota-webserial-esptool/dist/esp_loader.js
+index ae33641..5c66f6b 100644
+--- a/node_modules/tasmota-webserial-esptool/dist/esp_loader.js
++++ b/node_modules/tasmota-webserial-esptool/dist/esp_loader.js
+@@ -1,7 +1,7 @@
+ /// <reference types="@types/w3c-web-serial" />
+ import { CHIP_FAMILY_ESP32, CHIP_FAMILY_ESP32S2, CHIP_FAMILY_ESP32S3, CHIP_FAMILY_ESP32C2, CHIP_FAMILY_ESP32C3, CHIP_FAMILY_ESP32C5, CHIP_FAMILY_ESP32C6, CHIP_FAMILY_ESP32C61, CHIP_FAMILY_ESP32H2, CHIP_FAMILY_ESP32H4, CHIP_FAMILY_ESP32H21, CHIP_FAMILY_ESP32P4, CHIP_FAMILY_ESP32S31, CHIP_FAMILY_ESP8266, MAX_TIMEOUT, DEFAULT_TIMEOUT, ERASE_REGION_TIMEOUT_PER_MB, ESP_CHANGE_BAUDRATE, ESP_CHECKSUM_MAGIC, ESP_FLASH_BEGIN, ESP_FLASH_DATA, ESP_FLASH_END, ESP_MEM_BEGIN, ESP_MEM_DATA, ESP_MEM_END, ESP_READ_REG, ESP_WRITE_REG, ESP_SPI_ATTACH, ESP_SYNC, ESP_GET_SECURITY_INFO, FLASH_SECTOR_SIZE, FLASH_WRITE_SIZE, STUB_FLASH_WRITE_SIZE, MEM_END_ROM_TIMEOUT, ROM_INVALID_RECV_MSG, SYNC_PACKET, SYNC_TIMEOUT, USB_RAM_BLOCK, ESP_ERASE_FLASH, ESP_READ_FLASH, CHIP_ERASE_TIMEOUT, FLASH_READ_TIMEOUT, timeoutPerMb, ESP_ROM_BAUD, USB_JTAG_SERIAL_PID, ESP_FLASH_DEFL_BEGIN, ESP_FLASH_DEFL_DATA, ESP_FLASH_DEFL_END, getSpiFlashAddresses, DETECTED_FLASH_SIZES, CHIP_DETECT_MAGIC_REG_ADDR, CHIP_DETECT_MAGIC_VALUES, CHIP_ID_TO_INFO, ESP32P4_EFUSE_BLOCK1_ADDR, SlipReadError, } from "./const";
+ import { getStubCode } from "./stubs";
+-import { hexFormatter, sleep, slipEncode, toHex } from "./util";
++import { hexFormatter, padTo, sleep, slipEncode, toHex } from "./util";
+ // @ts-expect-error pako ESM module doesn't have proper type definitions
+ import { deflate } from "pako/dist/pako.esm.mjs";
+ import { pack, unpack } from "./struct";
+@@ -868,6 +868,8 @@ export class ESPLoader extends EventTarget {
+             const headerFlashSizeFreq = header[3];
+             this.logger.log(`Image header, Magic=${toHex(headerMagic)}, FlashMode=${toHex(headerFlashMode)}, FlashSizeFreq=${toHex(headerFlashSizeFreq)}`);
+         }
++        const paddedData = padTo(new Uint8Array(binaryData), 4);
++        binaryData = paddedData.buffer;
+         const uncompressedFilesize = binaryData.byteLength;
+         let compressedFilesize = 0;
+         let dataToFlash;
+diff --git a/node_modules/tasmota-webserial-esptool/dist/util.d.ts b/node_modules/tasmota-webserial-esptool/dist/util.d.ts
+index 71215b1..da8626f 100644
+--- a/node_modules/tasmota-webserial-esptool/dist/util.d.ts
++++ b/node_modules/tasmota-webserial-esptool/dist/util.d.ts
+@@ -11,4 +11,5 @@ export declare const slipEncode: (buffer: number[]) => number[];
+ export declare const toByteArray: (str: string) => number[];
+ export declare const hexFormatter: (bytes: number[]) => string;
+ export declare const toHex: (value: number, size?: number) => string;
++export declare function padTo(data: Uint8Array, alignment: number, padCharacter?: number): Uint8Array;
+ export declare const sleep: (ms: number) => Promise<unknown>;
+diff --git a/node_modules/tasmota-webserial-esptool/dist/util.js b/node_modules/tasmota-webserial-esptool/dist/util.js
+index 8be9dc8..54b0a71 100644
+--- a/node_modules/tasmota-webserial-esptool/dist/util.js
++++ b/node_modules/tasmota-webserial-esptool/dist/util.js
+@@ -43,4 +43,15 @@ export const toHex = (value, size = 2) => {
+         return "0x" + hex.padStart(size, "0");
+     }
+ };
++export function padTo(data, alignment, padCharacter = 0xff) {
++    const padMod = data.length % alignment;
++    if (padMod !== 0) {
++        const padding = new Uint8Array(alignment - padMod).fill(padCharacter);
++        const paddedData = new Uint8Array(data.length + padding.length);
++        paddedData.set(data);
++        paddedData.set(padding, data.length);
++        return paddedData;
++    }
++    return data;
++}
+ export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+diff --git a/node_modules/tasmota-webserial-esptool/src/esp_loader.ts b/node_modules/tasmota-webserial-esptool/src/esp_loader.ts
+index 92aefa9..f439cd7 100644
+--- a/node_modules/tasmota-webserial-esptool/src/esp_loader.ts
++++ b/node_modules/tasmota-webserial-esptool/src/esp_loader.ts
+@@ -61,7 +61,7 @@ import {
+   SlipReadError,
+ } from "./const";
+ import { getStubCode } from "./stubs";
+-import { hexFormatter, sleep, slipEncode, toHex } from "./util";
++import { hexFormatter, padTo, sleep, slipEncode, toHex } from "./util";
+ // @ts-expect-error pako ESM module doesn't have proper type definitions
+ import { deflate } from "pako/dist/pako.esm.mjs";
+ import { pack, unpack } from "./struct";
+@@ -1106,6 +1106,9 @@ export class ESPLoader extends EventTarget {
+       );
+     }
+ 
++    const paddedData = padTo(new Uint8Array(binaryData), 4);
++    binaryData = paddedData.buffer;
++
+     const uncompressedFilesize = binaryData.byteLength;
+     let compressedFilesize = 0;
+ 
+diff --git a/node_modules/tasmota-webserial-esptool/src/util.ts b/node_modules/tasmota-webserial-esptool/src/util.ts
+index 7ffff9f..2de6901 100644
+--- a/node_modules/tasmota-webserial-esptool/src/util.ts
++++ b/node_modules/tasmota-webserial-esptool/src/util.ts
+@@ -45,5 +45,17 @@ export const toHex = (value: number, size = 2) => {
+   }
+ };
+ 
++export function padTo(data: Uint8Array, alignment: number, padCharacter = 0xff): Uint8Array {
++  const padMod = data.length % alignment;
++  if (padMod !== 0) {
++    const padding = new Uint8Array(alignment - padMod).fill(padCharacter);
++    const paddedData = new Uint8Array(data.length + padding.length);
++    paddedData.set(data);
++    paddedData.set(padding, data.length);
++    return paddedData;
++  }
++  return data;
++}
++
+ export const sleep = (ms: number) =>
+   new Promise((resolve) => setTimeout(resolve, ms));
