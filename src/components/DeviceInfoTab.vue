@@ -37,18 +37,8 @@
                   {{ t('deviceInfo.nvs.disconnectReset') }}
                 </v-btn>
               </div>
-              <div class="text-body-2 text-medium-emphasis">
-                {{ t('deviceInfo.nvs.subtitle') }}
-              </div>
               <div class="mt-3">
-                <div class="text-caption text-medium-emphasis">
-                  {{ t('deviceInfo.nvs.keyLabel') }}
-                </div>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                  <v-chip size="small" variant="outlined" color="primary">la_machine</v-chip>
-                  <v-chip size="small" variant="outlined" color="primary">configuration</v-chip>
-                </div>
-                <div v-if="decodedConfiguration" class="device-nvs-grid mt-3">
+                <div v-if="decodedConfiguration" class="device-nvs-grid">
                   <div v-for="(field, index) in decodedConfiguration.fields" :key="field.labelKey"
                     class="device-nvs-field" :class="{ 'device-nvs-field--full': index === decodedConfiguration.fields.length - 1 }">
                     <div class="text-caption text-medium-emphasis">

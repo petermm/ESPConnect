@@ -136,8 +136,6 @@ const en = {
     unknown: 'Unknown',
     nvs: {
       title: 'La Machine Configuration',
-      subtitle: 'NVS contains the la_machine configuration entry.',
-      keyLabel: 'Namespace and key',
       valuePreview: 'Value preview',
       disconnectReset: 'Disconnect and reset la machine',
       selfTestResultEmpty: '(empty)',

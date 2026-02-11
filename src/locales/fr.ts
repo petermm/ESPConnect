@@ -136,8 +136,6 @@ const fr = {
     unknown: 'Inconnue',
     nvs: {
       title: 'Configuration la machine',
-      subtitle: 'Le NVS contient l’entrée de configuration la_machine.',
-      keyLabel: 'Espace de noms et clé',
       valuePreview: 'Aperçu de la valeur',
       disconnectReset: 'Déconnecter et réinitialiser la machine',
       selfTestResultEmpty: '(vide)',
