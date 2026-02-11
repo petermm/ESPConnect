@@ -26,6 +26,24 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
+    <div v-if="kioskMode" class="kiosk-top-actions">
+      <v-menu location="bottom end" offset="8">
+        <template #activator="{ props }">
+          <v-btn v-bind="props" variant="outlined" density="comfortable" class="kiosk-language-btn"
+            :title="languageMenuTitle">
+            {{ kioskLanguageDisplay }}
+            <v-icon size="18" class="ms-1">mdi-menu-down</v-icon>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item v-for="option in languageOptions" :key="option.code" :disabled="option.code === currentLanguage"
+            @click="selectLanguage(option.code)">
+            <v-list-item-title>{{ option.label }}</v-list-item-title>
+            <v-icon v-if="option.code === currentLanguage" size="16">mdi-check</v-icon>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </div>
     <v-app-bar v-if="!kioskMode" app :elevation="8">
       <div class="status-actions">
         <v-btn color="primary" variant="outlined" density="comfortable"
@@ -4000,6 +4018,9 @@ const kioskMode =
       return true;
     }
   })();
+if (typeof document !== 'undefined') {
+  document.body.classList.toggle('kiosk-mode', kioskMode);
+}
 const connected = ref(false);
 const busy = ref(false);
 const flashInProgress = ref(false);
@@ -4374,6 +4395,9 @@ const languageOptions = computed(() => [
 const currentLanguageLabel = computed(() =>
   languageOptions.value.find(lang => lang.code === currentLanguage.value)?.label ??
   t('language.english'),
+);
+const kioskLanguageDisplay = computed(() =>
+  currentLanguage.value === 'zh' ? '中文' : currentLanguage.value.toUpperCase(),
 );
 const otherLanguageLabel = computed(() => {
   const option = languageOptions.value.find(lang => lang.code !== currentLanguage.value);
@@ -7778,6 +7802,24 @@ onBeforeUnmount(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
+}
+
+.kiosk-top-actions {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 1000;
+}
+
+.kiosk-language-btn {
+  border-radius: 999px;
+  border-width: 2px;
+  text-transform: none;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  color: #000;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(10px);
 }
 
 .status-button {
