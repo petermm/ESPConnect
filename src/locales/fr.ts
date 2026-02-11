@@ -141,6 +141,9 @@ const fr = {
     nvs: {
       title: 'Configuration la machine',
       valuePreview: 'Aperçu de la valeur',
+      maintenanceTitle: 'Mode maintenance actif',
+      maintenanceMessage:
+        'La Machine est actuellement en mode maintenance. Appuyez sur « {action} » ci-dessous pour quitter le mode maintenance et revenir au fonctionnement normal.',
       disconnectReset: 'Déconnecter et redémarrer la machine',
       flashTitle: 'Flasher le firmware La Machine',
       flashRetail: 'Flasher Retail',

@@ -141,6 +141,9 @@ const en = {
     nvs: {
       title: 'La Machine Configuration',
       valuePreview: 'Value preview',
+      maintenanceTitle: 'Maintenance mode active',
+      maintenanceMessage:
+        'La Machine is currently in maintenance mode. Press “{action}” below to exit maintenance mode and return to normal operation.',
       disconnectReset: 'Disconnect and restart la machine',
       flashTitle: 'Flash La Machine firmware',
       flashRetail: 'Flash Retail',

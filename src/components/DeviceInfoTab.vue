@@ -39,7 +39,14 @@
               </template>
             </v-card-title>
             <v-card-text>
-              <div class="device-nvs-card__action">
+              <div :class="['device-nvs-card__action', { 'device-nvs-card__action--kiosk': kioskMode }]">
+                <v-alert v-if="kioskMode" type="warning" variant="tonal" density="compact" icon="mdi-alert-circle-outline"
+                  class="maintenance-alert">
+                  <div class="maintenance-alert__title">{{ t('deviceInfo.nvs.maintenanceTitle') }}</div>
+                  <div class="maintenance-alert__message">
+                    {{ t('deviceInfo.nvs.maintenanceMessage', { action: t('deviceInfo.nvs.disconnectReset') }) }}
+                  </div>
+                </v-alert>
                 <v-btn class="device-nvs-card__reset-btn" color="error" variant="flat" size="large" :disabled="busy"
                   @click="emit('disconnect-reset')">
                   <v-icon start>mdi-power</v-icon>
@@ -399,6 +406,40 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
   white-space: nowrap;
 }
 
+.maintenance-alert {
+  width: 100%;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--v-theme-warning) 30%, transparent);
+}
+
+.maintenance-alert__title {
+  font-weight: 750;
+  letter-spacing: 0.01em;
+}
+
+.maintenance-alert__message {
+  margin-top: 4px;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 78%, transparent);
+}
+
+.device-card--kiosk .maintenance-alert {
+  background: rgba(255, 188, 0, 0.12) !important;
+  border-color: rgba(255, 188, 0, 0.35) !important;
+}
+
+.device-card--kiosk .maintenance-alert__title {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.device-card--kiosk .maintenance-alert__message {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.device-card--kiosk .maintenance-alert :deep(.v-alert__prepend) {
+  color: #ffbc00;
+}
+
 .device-info-reveal-enter-active,
 .device-info-reveal-leave-active {
   transition:
@@ -566,6 +607,13 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
   display: flex;
   justify-content: center;
   padding: 4px 0 14px;
+}
+
+.device-nvs-card__action--kiosk {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 .device-nvs-card__reset-btn {

@@ -141,6 +141,9 @@ const zh = {
     nvs: {
       title: '设备配置',
       valuePreview: '值预览',
+      maintenanceTitle: '维护模式已开启',
+      maintenanceMessage:
+        'La Machine 当前处于维护模式。请点击下方「{action}」退出维护模式并恢复正常运行。',
       disconnectReset: '断开并重启 la machine',
       flashTitle: '刷写 La Machine 固件',
       flashRetail: '刷写 Retail',
