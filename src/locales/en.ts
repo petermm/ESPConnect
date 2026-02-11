@@ -1,4 +1,7 @@
 const en = {
+  branding: {
+    laMachineTagline: 'makes funny sounds',
+  },
   app: {
     title: 'ESPConnect',
     sectionsLabel: 'Sections',

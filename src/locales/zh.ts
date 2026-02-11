@@ -1,4 +1,7 @@
 const zh = {
+  branding: {
+    laMachineTagline: '会发出好玩的声音',
+  },
   app: {
     title: 'ESPConnect',
     sectionsLabel: '板块',

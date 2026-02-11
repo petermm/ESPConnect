@@ -92,7 +92,7 @@
     </v-app-bar>
     <v-main>
       <v-container fluid>
-        <v-card elevation="8" class="pa-6">
+        <v-card :elevation="kioskMode ? 0 : 8" class="pa-6">
           <v-alert v-if="!serialSupported" type="error" class="mb-4" variant="tonal" icon="mdi-alert-circle-outline">
             {{ t('alerts.browserUnsupported') }}
           </v-alert>
@@ -4357,6 +4357,9 @@ const theme = useTheme();
 const storedTheme =
   typeof window !== 'undefined' ? window.localStorage.getItem('esp32-theme') : null;
 const currentTheme = ref(storedTheme === 'light' ? 'light' : 'dark');
+if (kioskMode) {
+  currentTheme.value = 'light';
+}
 const isDarkTheme = computed(() => currentTheme.value === 'dark');
 const themeIcon = computed(() =>
   isDarkTheme.value ? 'mdi-weather-night' : 'mdi-white-balance-sunny'

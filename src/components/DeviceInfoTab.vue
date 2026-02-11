@@ -26,8 +26,17 @@
 
           <v-card v-if="hasLaMachineConfiguration" elevation="0" variant="tonal" class="device-nvs-card">
             <v-card-title class="d-flex align-center">
-              <v-icon class="me-2">mdi-cog-outline</v-icon>
-              {{ t('deviceInfo.nvs.title') }}
+              <template v-if="kioskMode">
+                <div class="la-machine-logo">la machine</div>
+                <v-spacer />
+                <div class="la-machine-tagline">
+                  {{ t('branding.laMachineTagline') }}
+                </div>
+              </template>
+              <template v-else>
+                <v-icon class="me-2">mdi-cog-outline</v-icon>
+                {{ t('deviceInfo.nvs.title') }}
+              </template>
             </v-card-title>
             <v-card-text>
               <div class="device-nvs-card__action">
@@ -370,6 +379,24 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
 <style scoped>
 .device-info-wrapper {
   position: relative;
+}
+
+.la-machine-logo {
+  font-family: "VinylCuts", "Montserrat", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
+  font-size: 2.1rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 92%, transparent);
+  text-transform: lowercase;
+}
+
+.la-machine-tagline {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 62%, transparent);
+  white-space: nowrap;
 }
 
 .device-info-reveal-enter-active,

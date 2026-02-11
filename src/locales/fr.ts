@@ -1,4 +1,7 @@
 const fr = {
+  branding: {
+    laMachineTagline: 'fait des sons rigolos',
+  },
   app: {
     title: 'ESPConnect',
     sectionsLabel: 'Sections',
