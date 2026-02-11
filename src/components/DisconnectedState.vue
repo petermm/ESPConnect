@@ -18,6 +18,9 @@
           <v-icon v-if="actionIcon" start>{{ actionIcon }}</v-icon>
           {{ actionLabel }}
         </v-btn>
+        <div v-if="actionLabel && computedActionHint" class="disconnected-card__action-hint">
+          {{ computedActionHint }}
+        </div>
       </v-card-text>
     </v-card>
   </div>
@@ -41,6 +44,7 @@ const props = withDefaults(
     actionLabel?: string;
     actionIcon?: string;
     actionDisabled?: boolean;
+    actionHint?: string;
   }>(),
   {
     icon: 'mdi-usb-port',
@@ -50,6 +54,7 @@ const props = withDefaults(
     actionLabel: undefined,
     actionIcon: undefined,
     actionDisabled: false,
+    actionHint: undefined,
   },
 );
 
@@ -61,6 +66,7 @@ const { t } = useI18n();
 const computedTitle = computed(() => props.title ?? t('disconnected.defaultTitle'));
 const computedSubtitle = computed(() => props.subtitle ?? t('disconnected.defaultSubtitle'));
 const computedHint = computed(() => props.hint ?? '');
+const computedActionHint = computed(() => props.actionHint ?? '');
 
 const normalizedMinHeight = computed<string | undefined>(() => {
   const value = props.minHeight;
@@ -116,5 +122,12 @@ const normalizedMinHeight = computed<string | undefined>(() => {
   margin-top: 10px;
   font-size: 0.82rem;
   color: color-mix(in srgb, var(--v-theme-on-surface) 58%, transparent);
+}
+
+.disconnected-card__action-hint {
+  margin-top: -6px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 56%, transparent);
 }
 </style>

@@ -115,6 +115,7 @@ const fr = {
     laMachineSubtitle: 'Connectez votre La Machine pour afficher les informations et la configuration.',
     laMachineHint: 'Cliquez sur Connecter, branchez la La Machine, puis sélectionnez son port série USB lorsqu’il apparaît.',
     laMachineAction: 'Rechercher la La Machine',
+    laMachineActionHint: 'Comme toute vraie machine, elle se cache derrière des noms techniques (comme USB/JTAG). Si elle joue à cache-cache, débranchez-la puis rebranchez-la, et chatouillez gentiment son bouton.',
     deviceInfo: 'Connectez un ESP32 afin de l`analyser.',
     nvs: 'Connectez un ESP32 ayant une partition NVS afin d`analyser les clefs et valeurs qui y sont stockées.',
     spiffs: 'Connectez un ESP32 pour en parcourir - et éditer - ses fichiers SPIFFS.',
@@ -137,7 +138,7 @@ const fr = {
     nvs: {
       title: 'Configuration la machine',
       valuePreview: 'Aperçu de la valeur',
-      disconnectReset: 'Déconnecter et réinitialiser la machine',
+      disconnectReset: 'Déconnecter et redémarrer la machine',
       flashTitle: 'Flasher le firmware La Machine',
       flashRetail: 'Flasher Retail',
       flash4mb: 'Flasher 4MB',

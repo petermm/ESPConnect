@@ -115,6 +115,7 @@ const en = {
     laMachineSubtitle: 'Connect your La Machine to view device information and configuration.',
     laMachineHint: 'Click Connect, plug in La Machine, then select its USB serial port when it appears.',
     laMachineAction: 'Look for La Machine',
+    laMachineActionHint: "Like any true machine, it hides behind technical names (like USB/JTAG). If it's playing hide-and-seek, try unplugging and replugging it, then give its button a gentle tickle.",
     deviceInfo: 'Connect to an ESP32 to see device information.',
     nvs: 'Connect to an ESP32 with an NVS partition to inspect stored key/value pairs.',
     spiffs: 'Connect to an ESP32 to browse and edit SPIFFS files.',
@@ -137,7 +138,7 @@ const en = {
     nvs: {
       title: 'La Machine Configuration',
       valuePreview: 'Value preview',
-      disconnectReset: 'Disconnect and reset la machine',
+      disconnectReset: 'Disconnect and restart la machine',
       flashTitle: 'Flash La Machine firmware',
       flashRetail: 'Flash Retail',
       flash4mb: 'Flash 4MB',

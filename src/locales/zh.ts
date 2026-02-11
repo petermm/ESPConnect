@@ -115,6 +115,7 @@ const zh = {
     laMachineSubtitle: '连接你的 La Machine 以查看设备信息和配置。',
     laMachineHint: '点击“连接”，插入 La Machine，然后在列表出现时选择对应的 USB 串口。',
     laMachineAction: '查找 La Machine',
+    laMachineActionHint: '像真正的机器一样，它喜欢躲在技术名号下（比如 USB/JTAG）。如果它在玩躲猫猫，试试先拔掉再重新插上，然后轻轻“挠挠”它的按钮。',
     deviceInfo: '连接到 ESP32 以查看设备信息。',
     nvs: '连接到具有 NVS 分区的 ESP32 以检查存储的键/值对。',
     spiffs: '连接到 ESP32 以浏览和编辑 SPIFFS 文件。',
@@ -137,7 +138,7 @@ const zh = {
     nvs: {
       title: '设备配置',
       valuePreview: '值预览',
-      disconnectReset: '断开并复位 la machine',
+      disconnectReset: '断开并重启 la machine',
       flashTitle: '刷写 La Machine 固件',
       flashRetail: '刷写 Retail',
       flash4mb: '刷写 4MB',

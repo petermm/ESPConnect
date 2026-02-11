@@ -190,6 +190,7 @@
     <div v-else key="device-info-empty" class="device-info-empty">
       <DisconnectedState :title="t('disconnected.laMachineTitle')" :subtitle="t('disconnected.laMachineSubtitle')"
         :hint="t('disconnected.laMachineHint')" :action-label="t('disconnected.laMachineAction')" action-icon="mdi-connection"
+        :action-hint="t('disconnected.laMachineActionHint')"
         :action-disabled="busy" @action="emit('connect')" />
     </div>
   </Transition>
