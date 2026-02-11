@@ -6494,6 +6494,7 @@ async function factoryResetLaMachine() {
       `Factory reset completed: erased ${target.label} (0x${target.offset.toString(16).toUpperCase()}, ${target.sizeText}).`,
       '[ESPConnect-Debug]',
     );
+    await disconnectFromUi();
   } catch (error) {
     const message = formatErrorMessage(error);
     const cancelled = message === ERASE_CANCEL_MESSAGE;
