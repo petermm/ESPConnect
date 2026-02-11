@@ -39,7 +39,9 @@
           <v-list-item v-for="option in languageOptions" :key="option.code" :disabled="option.code === currentLanguage"
             @click="selectLanguage(option.code)">
             <v-list-item-title>{{ option.label }}</v-list-item-title>
-            <v-icon v-if="option.code === currentLanguage" size="16">mdi-check</v-icon>
+            <template v-if="option.code === currentLanguage" #append>
+              <v-icon size="16">mdi-check</v-icon>
+            </template>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -73,7 +75,9 @@
             <v-list-item v-for="option in languageOptions" :key="option.code"
               :disabled="option.code === currentLanguage" @click="selectLanguage(option.code)">
               <v-list-item-title>{{ option.label }}</v-list-item-title>
-              <v-icon v-if="option.code === currentLanguage" size="16">mdi-check</v-icon>
+              <template v-if="option.code === currentLanguage" #append>
+                <v-icon size="16">mdi-check</v-icon>
+              </template>
             </v-list-item>
           </v-list>
         </v-menu>
