@@ -111,6 +111,10 @@ const fr = {
   disconnected: {
     defaultTitle: 'Aucun composant connecté',
     defaultSubtitle: 'Veuillez connecter un ESP32 pour commencer.',
+    laMachineTitle: 'Aucune La Machine détectée',
+    laMachineSubtitle: 'Connectez votre La Machine pour afficher les informations et la configuration.',
+    laMachineHint: 'Cliquez sur Connecter, branchez la La Machine, puis sélectionnez son port série USB lorsqu’il apparaît.',
+    laMachineAction: 'Rechercher la La Machine',
     deviceInfo: 'Connectez un ESP32 afin de l`analyser.',
     nvs: 'Connectez un ESP32 ayant une partition NVS afin d`analyser les clefs et valeurs qui y sont stockées.',
     spiffs: 'Connectez un ESP32 pour en parcourir - et éditer - ses fichiers SPIFFS.',
@@ -135,6 +139,7 @@ const fr = {
       subtitle: 'Le NVS contient l’entrée de configuration la_machine.',
       keyLabel: 'Espace de noms et clé',
       valuePreview: 'Aperçu de la valeur',
+      disconnectReset: 'Déconnecter et réinitialiser la machine',
       selfTestResultEmpty: '(vide)',
       fields: {
         closedDuty: 'Seuil fermé',

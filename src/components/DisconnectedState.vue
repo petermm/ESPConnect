@@ -10,7 +10,14 @@
       <div class="disconnected-card__subtitle">
         {{ computedSubtitle }}
       </div>
+      <div v-if="computedHint" class="disconnected-card__hint">
+        {{ computedHint }}
+      </div>
     </div>
+        <v-btn v-if="actionLabel" color="primary" variant="flat" :disabled="actionDisabled" @click="emit('action')">
+          <v-icon v-if="actionIcon" start>{{ actionIcon }}</v-icon>
+          {{ actionLabel }}
+        </v-btn>
       </v-card-text>
     </v-card>
   </div>
@@ -26,22 +33,34 @@ const props = withDefaults(
   defineProps<{
     title?: string;
     subtitle?: string;
+    hint?: string;
     icon?: string;
     minHeight?: SizeValue;
     avatarSize?: SizeValue;
     iconSize?: SizeValue;
+    actionLabel?: string;
+    actionIcon?: string;
+    actionDisabled?: boolean;
   }>(),
   {
     icon: 'mdi-usb-port',
     minHeight: 320,
     avatarSize: 70,
     iconSize: 34,
+    actionLabel: undefined,
+    actionIcon: undefined,
+    actionDisabled: false,
   },
 );
+
+const emit = defineEmits<{
+  (e: 'action'): void;
+}>();
 
 const { t } = useI18n();
 const computedTitle = computed(() => props.title ?? t('disconnected.defaultTitle'));
 const computedSubtitle = computed(() => props.subtitle ?? t('disconnected.defaultSubtitle'));
+const computedHint = computed(() => props.hint ?? '');
 
 const normalizedMinHeight = computed<string | undefined>(() => {
   const value = props.minHeight;
@@ -91,5 +110,11 @@ const normalizedMinHeight = computed<string | undefined>(() => {
 .disconnected-card__subtitle {
   font-size: 0.92rem;
   color: color-mix(in srgb, var(--v-theme-on-surface) 65%, transparent);
+}
+
+.disconnected-card__hint {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 58%, transparent);
 }
 </style>

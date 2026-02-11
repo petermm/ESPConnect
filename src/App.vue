@@ -102,7 +102,8 @@
           </v-alert>
           <v-window v-model="activeTab" class="app-tab-content">
             <v-window-item value="info">
-              <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" />
+              <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" :busy="busy"
+                @disconnect-reset="disconnectFromUi" @connect="lookForLaMachine" />
             </v-window-item>
 
             <v-window-item value="partitions">
@@ -6443,6 +6444,11 @@ async function disconnectFromUi() {
   } finally {
     busy.value = false;
   }
+}
+
+async function lookForLaMachine() {
+  autoConnectEnabled.value = true;
+  await connect();
 }
 
 // Parse a flash offset value from hex or decimal input.

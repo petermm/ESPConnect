@@ -28,6 +28,12 @@
             <v-card-title class="d-flex align-center">
               <v-icon class="me-2">mdi-cog-outline</v-icon>
               {{ t('deviceInfo.nvs.title') }}
+              <v-spacer />
+              <v-btn color="error" variant="tonal" density="comfortable" :disabled="busy"
+                @click="emit('disconnect-reset')">
+                <v-icon start>mdi-power</v-icon>
+                {{ t('deviceInfo.nvs.disconnectReset') }}
+              </v-btn>
             </v-card-title>
             <v-card-text>
               <div class="text-body-2 text-medium-emphasis">
@@ -160,9 +166,9 @@
       </v-card>
     </div>
     <div v-else key="device-info-empty" class="device-info-empty">
-<DisconnectedState
-      :title="t('disconnected.defaultTitle')"
-      :subtitle="t('disconnected.deviceInfo')" />
+      <DisconnectedState :title="t('disconnected.laMachineTitle')" :subtitle="t('disconnected.laMachineSubtitle')"
+        :hint="t('disconnected.laMachineHint')" :action-label="t('disconnected.laMachineAction')" action-icon="mdi-connection"
+        :action-disabled="busy" @action="emit('connect')" />
     </div>
   </Transition>
 </template>
@@ -181,12 +187,19 @@ const props = withDefaults(
   defineProps<{
     chipDetails?: DeviceDetails | DeviceDetailsWrapper | null;
     nvsResult?: NvsParseResult | null;
+    busy?: boolean;
   }>(),
   {
     chipDetails: null,
     nvsResult: null,
+    busy: false,
   },
 );
+
+const emit = defineEmits<{
+  (e: 'disconnect-reset'): void;
+  (e: 'connect'): void;
+}>();
 
 const { t } = useI18n();
 

@@ -111,6 +111,10 @@ const en = {
   disconnected: {
     defaultTitle: 'No device connected',
     defaultSubtitle: 'Connect to an ESP32 to continue.',
+    laMachineTitle: 'No La Machine found',
+    laMachineSubtitle: 'Connect your La Machine to view device information and configuration.',
+    laMachineHint: 'Click Connect, plug in La Machine, then select its USB serial port when it appears.',
+    laMachineAction: 'Look for La Machine',
     deviceInfo: 'Connect to an ESP32 to see device information.',
     nvs: 'Connect to an ESP32 with an NVS partition to inspect stored key/value pairs.',
     spiffs: 'Connect to an ESP32 to browse and edit SPIFFS files.',
@@ -135,6 +139,7 @@ const en = {
       subtitle: 'NVS contains the la_machine configuration entry.',
       keyLabel: 'Namespace and key',
       valuePreview: 'Value preview',
+      disconnectReset: 'Disconnect and reset la machine',
       selfTestResultEmpty: '(empty)',
       fields: {
         closedDuty: 'Closed duty',
