@@ -4,7 +4,7 @@
       data-testid="device-summary">
       <v-card class="device-card" elevation="0">
         <v-card-text class="device-card__body">
-          <div class="device-header">
+          <div v-if="!kioskMode" class="device-header">
             <div class="device-header__text">
               <div class="device-chip-name">{{ details.description || details.name }}</div>
               <div v-if="hasDistinctDescription" class="device-chip-alias">
@@ -88,7 +88,7 @@
             </v-card-text>
           </v-card>
           
-          <v-card class="device-summary-card" elevation="0" variant="flat" color="primary">
+          <v-card v-if="!kioskMode" class="device-summary-card" elevation="0" variant="flat" color="primary">
             <v-card-text class="device-summary-card__content">
               <div class="device-summary">
                   <div class="summary-block">
@@ -143,7 +143,7 @@
             </v-card-text>
           </v-card>
 
-          <div v-if="details.factGroups?.length" class="detail-groups">
+          <div v-if="!kioskMode && details.factGroups?.length" class="detail-groups">
             <v-row dense class="detail-group-row">
               <v-col v-for="group in details.factGroups" :key="group.title" cols="12" md="6" class="">
                 <v-card elevation="0" variant="tonal" class="detail-card">
@@ -212,11 +212,13 @@ const props = withDefaults(
     chipDetails?: DeviceDetails | DeviceDetailsWrapper | null;
     nvsResult?: NvsParseResult | null;
     busy?: boolean;
+    kioskMode?: boolean;
   }>(),
   {
     chipDetails: null,
     nvsResult: null,
     busy: false,
+    kioskMode: false,
   },
 );
 

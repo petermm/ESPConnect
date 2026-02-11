@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer permanent app elevation="1">
+    <v-navigation-drawer v-if="!kioskMode" permanent app elevation="1">
       <v-list>
         <v-list-item prepend-icon="mdi-usb" :title="t('app.title')" :subtitle="'v' + APP_VERSION">
         </v-list-item>
@@ -26,7 +26,7 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    <v-app-bar app :elevation="8">
+    <v-app-bar v-if="!kioskMode" app :elevation="8">
       <div class="status-actions">
         <v-btn color="primary" variant="outlined" density="comfortable"
           :disabled="!serialSupported || connected || busy" @click="connect()" data-testid="connect-btn">
@@ -103,6 +103,7 @@
           <v-window v-model="activeTab" class="app-tab-content">
             <v-window-item value="info">
               <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" :busy="busy || maintenanceBusy"
+                :kiosk-mode="kioskMode"
                 @disconnect-reset="disconnectFromUi" @connect="lookForLaMachine" @factory-reset="factoryResetLaMachine"
                 @flash-la-machine="flashLaMachineFirmware" />
             </v-window-item>
@@ -3974,6 +3975,30 @@ const isE2E =
   (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('e2e'));
 const serialSupported = isE2E || 'serial' in navigator;
 const { t } = useI18n();
+const kioskMode =
+  typeof window !== 'undefined' &&
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    const kiosk = params.get('kiosk');
+    if (kiosk === '1' || kiosk === 'true' || params.has('kiosk')) {
+      return true;
+    }
+
+    const chrome = params.get('chrome');
+    if (chrome === '0' || chrome === 'false') {
+      return true;
+    }
+
+    if (window.localStorage?.getItem('espconnect.kiosk') === '1') {
+      return true;
+    }
+
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  })();
 const connected = ref(false);
 const busy = ref(false);
 const flashInProgress = ref(false);
