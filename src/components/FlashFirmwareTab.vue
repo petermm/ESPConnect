@@ -264,28 +264,6 @@
       </v-alert>
     </v-card-text>
   </v-card>
-  <v-dialog :model-value="flashProgressDialog.visible" persistent max-width="420" class="progress-dialog">
-    <v-card class="progress-dialog__card">
-      <v-card-title class="progress-dialog__title">
-        <v-icon start color="primary">mdi-lightning-bolt</v-icon>
-        {{ t('flashFirmware.progress.flashTitle') }}
-      </v-card-title>
-      <v-card-text class="progress-dialog__body">
-        <div class="progress-dialog__label">
-          {{ flashProgressDialog.label || t('flashFirmware.progress.preparingFlash') }}
-        </div>
-        <v-progress-linear :model-value="flashProgressDialog.value" height="24" color="primary" rounded striped
-          :indeterminate="flashProgressDialog.indeterminate === true" />
-      </v-card-text>
-      <v-card-actions class="progress-dialog__actions">
-        <v-spacer />
-        <v-btn color="secondary" variant="tonal" :disabled="!flashInProgress" @click="emit('cancel-flash')">
-          <v-icon start>mdi-stop</v-icon>
-          {{ t('flashFirmware.progress.stop') }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
   <v-dialog :model-value="downloadProgress.visible" persistent max-width="500" class="progress-dialog">
     <v-card class="progress-dialog__card">
       <v-card-title class="progress-dialog__title">

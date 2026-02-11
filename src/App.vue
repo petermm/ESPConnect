@@ -643,6 +643,29 @@
           </v-card>
         </v-dialog>
 
+        <v-dialog :model-value="flashProgressDialog.visible" persistent max-width="420">
+          <v-card>
+            <v-card-title class="text-h6 d-flex align-center">
+              <v-icon start color="primary">mdi-lightning-bolt</v-icon>
+              {{ t('flashFirmware.progress.flashTitle') }}
+            </v-card-title>
+            <v-card-text>
+              <div class="text-body-2 mb-3">
+                {{ flashProgressDialog.label || t('flashFirmware.progress.preparingFlash') }}
+              </div>
+              <v-progress-linear :model-value="flashProgressDialog.value" height="24" color="primary" rounded striped
+                :indeterminate="flashProgressDialog.indeterminate === true" />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn color="secondary" variant="tonal" :disabled="!flashInProgress" @click="handleCancelFlash">
+                <v-icon start>mdi-stop</v-icon>
+                {{ t('flashFirmware.progress.stop') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <v-snackbar v-model="toast.visible" :timeout="toast.timeout" :color="toast.color" location="bottom right"
           data-testid="toast-container">
           {{ toast.message }}
