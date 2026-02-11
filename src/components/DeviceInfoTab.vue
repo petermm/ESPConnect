@@ -28,14 +28,15 @@
             <v-card-title class="d-flex align-center">
               <v-icon class="me-2">mdi-cog-outline</v-icon>
               {{ t('deviceInfo.nvs.title') }}
-              <v-spacer />
-              <v-btn color="error" variant="tonal" density="comfortable" :disabled="busy"
-                @click="emit('disconnect-reset')">
-                <v-icon start>mdi-power</v-icon>
-                {{ t('deviceInfo.nvs.disconnectReset') }}
-              </v-btn>
             </v-card-title>
             <v-card-text>
+              <div class="device-nvs-card__action">
+                <v-btn class="device-nvs-card__reset-btn" color="error" variant="flat" size="large" :disabled="busy"
+                  @click="emit('disconnect-reset')">
+                  <v-icon start>mdi-power</v-icon>
+                  {{ t('deviceInfo.nvs.disconnectReset') }}
+                </v-btn>
+              </div>
               <div class="text-body-2 text-medium-emphasis">
                 {{ t('deviceInfo.nvs.subtitle') }}
               </div>
@@ -505,6 +506,18 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
   border-radius: 18px;
   margin-bottom: clamp(16px, 3vw, 28px);
   border: 1px solid color-mix(in srgb, var(--v-theme-primary) 12%, transparent);
+}
+
+.device-nvs-card__action {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 14px;
+}
+
+.device-nvs-card__reset-btn {
+  min-width: min(520px, 100%);
+  width: 100%;
+  text-transform: none;
 }
 
 .device-nvs-card__value {
