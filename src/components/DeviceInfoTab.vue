@@ -54,6 +54,14 @@
                   <code class="device-nvs-card__value">{{ configurationEntry.valuePreview }}</code>
                 </div>
               </div>
+              <v-divider class="my-4" />
+              <div class="device-nvs-card__factory">
+                <v-btn class="device-nvs-card__factory-btn" color="error" variant="tonal" size="large"
+                  :disabled="busy" @click="emit('factory-reset')">
+                  <v-icon start>mdi-delete-forever</v-icon>
+                  {{ t('deviceInfo.nvs.factoryReset') }}
+                </v-btn>
+              </div>
             </v-card-text>
           </v-card>
           
@@ -190,6 +198,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'disconnect-reset'): void;
   (e: 'connect'): void;
+  (e: 'factory-reset'): void;
 }>();
 
 const { t } = useI18n();
@@ -505,6 +514,17 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
 }
 
 .device-nvs-card__reset-btn {
+  min-width: min(520px, 100%);
+  width: 100%;
+  text-transform: none;
+}
+
+.device-nvs-card__factory {
+  display: flex;
+  justify-content: center;
+}
+
+.device-nvs-card__factory-btn {
   min-width: min(520px, 100%);
   width: 100%;
   text-transform: none;

@@ -138,6 +138,12 @@ const fr = {
       title: 'Configuration la machine',
       valuePreview: 'Aperçu de la valeur',
       disconnectReset: 'Déconnecter et réinitialiser la machine',
+      factoryReset: 'Réinitialisation usine (effacer NVS)',
+      factoryResetConfirmTitle: 'Réinitialiser La Machine ?',
+      factoryResetConfirmMessage: 'Cette action effacera la partition {label} ({offset}, {size}). Les réglages stockés dans le NVS seront perdus.',
+      factoryResetConfirmButton: 'Effacer NVS',
+      factoryResetNoPartition: 'Aucune partition NVS trouvée.',
+      factoryResetComplete: 'Réinitialisation terminée. NVS effacé.',
       selfTestResultEmpty: '(vide)',
       fields: {
         closedDuty: 'Seuil fermé',

@@ -138,6 +138,12 @@ const zh = {
       title: '设备配置',
       valuePreview: '值预览',
       disconnectReset: '断开并复位 la machine',
+      factoryReset: '恢复出厂设置（清除 NVS）',
+      factoryResetConfirmTitle: '要恢复出厂设置吗？',
+      factoryResetConfirmMessage: '此操作将清除 {label} 分区（{offset}，{size}）。保存在 NVS 中的设置将丢失。',
+      factoryResetConfirmButton: '清除 NVS',
+      factoryResetNoPartition: '未找到 NVS 分区。',
+      factoryResetComplete: '恢复出厂设置完成，NVS 已清除。',
       selfTestResultEmpty: '（空）',
       fields: {
         closedDuty: '关闭占空比',

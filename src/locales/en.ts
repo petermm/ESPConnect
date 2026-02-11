@@ -138,6 +138,12 @@ const en = {
       title: 'La Machine Configuration',
       valuePreview: 'Value preview',
       disconnectReset: 'Disconnect and reset la machine',
+      factoryReset: 'Factory reset (erase NVS)',
+      factoryResetConfirmTitle: 'Factory reset La Machine?',
+      factoryResetConfirmMessage: 'This will erase the {label} partition ({offset}, {size}). Settings stored in NVS will be lost.',
+      factoryResetConfirmButton: 'Erase NVS',
+      factoryResetNoPartition: 'No NVS partition found.',
+      factoryResetComplete: 'Factory reset complete. NVS erased.',
       selfTestResultEmpty: '(empty)',
       fields: {
         closedDuty: 'Closed duty',

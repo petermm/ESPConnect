@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <v-app>
     <v-navigation-drawer permanent app elevation="1">
       <v-list>
@@ -102,8 +102,8 @@
           </v-alert>
           <v-window v-model="activeTab" class="app-tab-content">
             <v-window-item value="info">
-              <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" :busy="busy"
-                @disconnect-reset="disconnectFromUi" @connect="lookForLaMachine" />
+              <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" :busy="busy || maintenanceBusy"
+                @disconnect-reset="disconnectFromUi" @connect="lookForLaMachine" @factory-reset="factoryResetLaMachine" />
             </v-window-item>
 
             <v-window-item value="partitions">
@@ -6449,6 +6449,67 @@ async function disconnectFromUi() {
 async function lookForLaMachine() {
   autoConnectEnabled.value = true;
   await connect();
+}
+
+async function factoryResetLaMachine() {
+  const loaderInstance = loader.value;
+  if (!loaderInstance) {
+    showToast(t('flashFirmware.backup.status.connectFirst'), { color: 'warning' });
+    return;
+  }
+
+  const target =
+    nvsSelectedPartition.value ??
+    nvsPartitions.value.find(partition => partition.label.toLowerCase() === 'nvs') ??
+    nvsPartitions.value[0];
+
+  if (!target) {
+    showToast(t('deviceInfo.nvs.factoryResetNoPartition'), { color: 'warning' });
+    return;
+  }
+
+  const confirmErase = await showConfirmation({
+    title: t('deviceInfo.nvs.factoryResetConfirmTitle'),
+    message: t('deviceInfo.nvs.factoryResetConfirmMessage', {
+      label: target.label,
+      offset: '0x' + target.offset.toString(16).toUpperCase(),
+      size: target.sizeText,
+    }),
+    confirmText: t('deviceInfo.nvs.factoryResetConfirmButton'),
+    cancelText: t('dialogs.cancel'),
+    destructive: true,
+  });
+
+  if (!confirmErase) {
+    return;
+  }
+
+  try {
+    maintenanceBusy.value = true;
+    flashInProgress.value = true;
+    await eraseFlashRegion(target.offset, target.size, { label: `${target.label}` });
+    nvsState.result = null;
+    showToast(t('deviceInfo.nvs.factoryResetComplete'), { color: 'success', timeout: 6000 });
+    appendLog(
+      `Factory reset completed: erased ${target.label} (0x${target.offset.toString(16).toUpperCase()}, ${target.sizeText}).`,
+      '[ESPConnect-Debug]',
+    );
+  } catch (error) {
+    const message = formatErrorMessage(error);
+    const cancelled = message === ERASE_CANCEL_MESSAGE;
+    showToast(
+      cancelled ? t('flashFirmware.backup.status.cancelled') : t('flashFirmware.backup.status.failed', { error: message }),
+      { color: cancelled ? 'warning' : 'error', timeout: 6000 },
+    );
+  } finally {
+    maintenanceBusy.value = false;
+    flashInProgress.value = false;
+    flashProgressDialog.visible = false;
+    flashProgressDialog.value = 0;
+    flashProgressDialog.label = '';
+    flashProgressDialog.indeterminate = false;
+    flashCancelRequested.value = false;
+  }
 }
 
 // Parse a flash offset value from hex or decimal input.
