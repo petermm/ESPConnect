@@ -100,7 +100,7 @@ const en = {
     confirmationTitle: 'Please confirm',
     returningToMaintenance: 'Returning to maintenance mode...',
     reEnteringBootloader: 'Re-entering ROM bootloader...',
-    connectingToDevice: 'Connecting to ESP device...',
+    connectingToDevice: 'Talking to la machine - bip bip..',
     openingSerialPort: 'Opening serial port...',
     restoringBaud: 'Restoring baud to {baud} bps...',
     handshakingBootloader: 'Handshaking with ROM bootloader...',

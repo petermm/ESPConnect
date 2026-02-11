@@ -100,7 +100,7 @@ const zh = {
     confirmationTitle: '请确认',
     returningToMaintenance: '正在返回维护模式...',
     reEnteringBootloader: '正在重新进入 ROM 引导程序...',
-    connectingToDevice: '正在连接 ESP 设备...',
+    connectingToDevice: '正在和 la machine 说话——哔哔…',
     openingSerialPort: '正在打开串口...',
     restoringBaud: '正在将波特率恢复到 {baud} bps...',
     handshakingBootloader: '正在与 ROM 引导程序握手...',
