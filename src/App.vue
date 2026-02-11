@@ -33,7 +33,7 @@
           <v-icon start>mdi-usb-flash-drive</v-icon>
           {{ t('actions.connect') }}
         </v-btn>
-        <v-btn color="error" variant="outlined" density="comfortable" :disabled="!connected || busy" @click="disconnect"
+        <v-btn color="error" variant="outlined" density="comfortable" :disabled="!connected || busy" @click="disconnectFromUi"
           data-testid="disconnect-btn">
           <v-icon start>mdi-close-circle</v-icon>
           {{ t('actions.disconnect') }}
@@ -6414,10 +6414,35 @@ async function connect(port?: SerialPort) {
 
 // Disconnect from the device and clean up state.
 async function disconnect() {
+  if (busy.value) return;
   busy.value = true;
-  await disconnectTransport();
-  appendLog('Serial port disconnected.');
-  busy.value = false;
+  try {
+    await disconnectTransport();
+    appendLog('Serial port disconnected.');
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function disconnectFromUi() {
+  if (busy.value) return;
+  busy.value = true;
+  try {
+    autoConnectEnabled.value = false;
+    const currentLoader = loader.value;
+    if (currentLoader) {
+      try {
+        appendLog('Board Hard Reset (before disconnect)', '[ESPConnect-Debug]');
+        await runLoaderOperation(() => currentLoader.hardReset(false));
+      } catch (err) {
+        appendLog(`Board reset failed: ${formatErrorMessage(err)}`, '[error]');
+      }
+    }
+    await disconnectTransport();
+    appendLog('Serial port disconnected.');
+  } finally {
+    busy.value = false;
+  }
 }
 
 // Parse a flash offset value from hex or decimal input.
