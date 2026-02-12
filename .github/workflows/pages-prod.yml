@@ -5,6 +5,8 @@ on:
     branches: [main]
   push:
     branches: [main]
+  schedule:
+    - cron: "0 */4 * * *"
 
 concurrency:
   group: pages-prod
@@ -23,6 +25,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Install firmware fetch dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq unzip
+
+      - name: Fetch latest firmware artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash ./get_firmwares.sh
 
       - name: Setup Node
         uses: actions/setup-node@v4

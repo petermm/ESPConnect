@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-REPO="petermm/la_machine"
+REPO="pguyot/la_machine"
 WORKFLOW_FILE="build.yaml"
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
