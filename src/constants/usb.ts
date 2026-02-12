@@ -19,7 +19,7 @@ export const SUPPORTED_BAUDRATES = [
 export const MAX_SUPPORTED_BAUDRATE =
   SUPPORTED_BAUDRATES[SUPPORTED_BAUDRATES.length - 1];
 export const DEFAULT_ROM_BAUD = 115200;
-export const DEFAULT_FLASH_BAUD = 921600;
+export const DEFAULT_FLASH_BAUD = 460800;
 export const MONITOR_BAUD = 115200;
 export const DEBUG_SERIAL = false;
 

@@ -6669,14 +6669,35 @@ async function flashLaMachineFirmware(variant: LaMachineFirmwareVariant) {
         throw new Error(t('flashFirmware.backup.status.unsupported'));
       }
 
-      flashProgressDialog.visible = true;
-      flashProgressDialog.value = 0;
-      flashProgressDialog.indeterminate = true;
-      flashProgressDialog.label = t('flashFirmware.progress.erasingFlash');
-      await eraseFlashFn.call(loaderInstance);
-      flashProgressDialog.indeterminate = false;
+      const performErase = async () => {
+        flashProgressDialog.visible = true;
+        flashProgressDialog.value = 0;
+        flashProgressDialog.indeterminate = true;
+        flashProgressDialog.label = t('flashFirmware.progress.erasingFlash');
+        await eraseFlashFn.call(loaderInstance);
+        flashProgressDialog.indeterminate = false;
+      };
 
-      await sleep(3000);
+      try {
+        await performErase();
+      } catch (error) {
+        const message = formatErrorMessage(error);
+        const mayRecover = /invalid head of packet|slip|timed out/i.test(message);
+        if (!mayRecover) {
+          throw error;
+        }
+
+        flashProgressDialog.visible = true;
+        flashProgressDialog.value = 0;
+        flashProgressDialog.indeterminate = true;
+        flashProgressDialog.label = t('dialogs.reconnectingStub');
+        await transport.value?.flushInput?.();
+        await esptoolClient.value?.syncWithStub?.();
+        await transport.value?.flushInput?.();
+        await performErase();
+      }
+
+      await sleep(500);
 
       await loaderInstance.flashData(
         bytes.buffer,
