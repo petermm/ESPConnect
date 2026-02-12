@@ -25,7 +25,7 @@ done
 mkdir -p "$DEST_DIR"
 
 echo "Fetching latest successful workflow run for ${REPO}..."
-RUN_ID=$(gh api "repos/${REPO}/actions/workflows/${WORKFLOW_FILE}/runs?status=success&per_page=1" \
+RUN_ID=$(gh api "repos/${REPO}/actions/workflows/${WORKFLOW_FILE}/runs?status=success&branch=main&per_page=1" \
   --jq '.workflow_runs[0].id')
 
 if [[ -z "$RUN_ID" || "$RUN_ID" == "null" ]]; then
