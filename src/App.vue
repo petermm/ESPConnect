@@ -6402,7 +6402,7 @@ async function connect(port?: SerialPort) {
       partitionTable.value = partitions;
       void handleReadNvs();
       appMetadataLoaded.value = false;
-      void loadAppMetadata({ force: true });
+      //void loadAppMetadata({ force: true });
     } else {
       partitionTable.value = [];
       appMetadataLoaded.value = false;
@@ -6752,7 +6752,7 @@ async function flashLaMachineFirmware(variant: LaMachineFirmwareVariant) {
     flashProgressDialog.label = '';
     flashProgressDialog.indeterminate = false;
     await refreshPartitionTable(loaderInstance);
-    void loadAppMetadata({ force: true });
+    //void loadAppMetadata({ force: true });
     void handleReadNvs();
     busy.value = false;
   }
