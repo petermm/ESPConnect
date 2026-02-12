@@ -6605,6 +6605,8 @@ const LA_MACHINE_FIRMWARE_VARIANTS: Record<
   proto: { assetPath: 'assets/firmware/la_machine_proto.bin', labelKey: 'deviceInfo.nvs.flashProto' },
 };
 
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
 function getPublicAssetUrl(assetPath: string) {
   const base = import.meta.env.BASE_URL || '/';
   const normalizedBase = base.endsWith('/') ? base : `${base}/`;
@@ -6662,6 +6664,20 @@ async function flashLaMachineFirmware(variant: LaMachineFirmwareVariant) {
     const startTime = performance.now();
 
     await runLoaderOperation(async () => {
+      const eraseFlashFn = (loaderInstance as ESPLoader & { eraseFlash?: () => Promise<void> }).eraseFlash;
+      if (typeof eraseFlashFn !== 'function') {
+        throw new Error(t('flashFirmware.backup.status.unsupported'));
+      }
+
+      flashProgressDialog.visible = true;
+      flashProgressDialog.value = 0;
+      flashProgressDialog.indeterminate = true;
+      flashProgressDialog.label = t('flashFirmware.progress.erasingFlash');
+      await eraseFlashFn.call(loaderInstance);
+      flashProgressDialog.indeterminate = false;
+
+      await sleep(3000);
+
       await loaderInstance.flashData(
         bytes.buffer,
         (written, total) => {

@@ -150,7 +150,7 @@ const fr = {
       flash4mb: 'Flasher 4MB',
       flashProto: 'Flasher Proto',
       flashConfirmTitle: 'Confirmer le flash',
-      flashConfirmMessage: 'Flasher {label} à 0x0 ? Cela écrasera les données existantes.',
+      flashConfirmMessage: 'Flasher {label} à 0x0 ? Cela effacera d’abord toute la flash et ne peut pas être annulé.',
       flashConfirmButton: 'Flasher',
       flashStatusDownloading: 'Téléchargement de {label}…',
       flashStatusFlashing: 'Flash de {label} - {written} octets à {baud}',

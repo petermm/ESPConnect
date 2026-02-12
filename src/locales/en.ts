@@ -150,7 +150,7 @@ const en = {
       flash4mb: 'Flash 4MB',
       flashProto: 'Flash Proto',
       flashConfirmTitle: 'Confirm flash',
-      flashConfirmMessage: 'Flash {label} at 0x0? This will overwrite existing data.',
+      flashConfirmMessage: 'Flash {label} at 0x0? This will erase the entire flash first and cannot be undone.',
       flashConfirmButton: 'Flash',
       flashStatusDownloading: 'Downloading {label}...',
       flashStatusFlashing: 'Flashing {label} - {written} bytes at {baud}',

@@ -150,7 +150,7 @@ const zh = {
       flash4mb: '刷写 4MB',
       flashProto: '刷写 Proto',
       flashConfirmTitle: '确认刷写',
-      flashConfirmMessage: '要将 {label} 刷写到 0x0 吗？这将覆盖现有数据。',
+      flashConfirmMessage: '要将 {label} 刷写到 0x0 吗？这将先擦除整个闪存，且无法撤销。',
       flashConfirmButton: '刷写',
       flashStatusDownloading: '正在下载 {label}…',
       flashStatusFlashing: '正在刷写 {label} - {written} 字节（{baud}）',
