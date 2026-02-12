@@ -54,6 +54,17 @@
                 </v-btn>
               </div>
               <div class="mt-3">
+                <div v-if="firmwareMetadata" class="device-nvs-metadata">
+                  <div class="device-nvs-metadata__detail">
+                    <span class="device-nvs-metadata__label">{{ t('apps.details.version') }}</span>
+                    <span class="device-nvs-metadata__value">{{ firmwareMetadata.version || t('apps.unknown') }}</span>
+                  </div>
+                  <div class="device-nvs-metadata__detail">
+                    <span class="device-nvs-metadata__label">{{ t('apps.details.built') }}</span>
+                    <span class="device-nvs-metadata__value">{{ firmwareMetadata.built || t('apps.unknown') }}</span>
+                  </div>
+                </div>
+                <v-divider v-if="firmwareMetadata && (decodedConfiguration || configurationEntry?.valuePreview)" class="my-4" />
                 <div v-if="decodedConfiguration" class="device-nvs-grid">
                   <div v-for="(field, index) in decodedConfiguration.fields" :key="field.labelKey"
                     class="device-nvs-field" :class="{ 'device-nvs-field--full': index === decodedConfiguration.fields.length - 1 }">
@@ -218,6 +229,7 @@ import { useI18n } from 'vue-i18n';
 import DisconnectedState from './DisconnectedState.vue';
 import { PRIMARY_FACTS, getFactLabelKey } from '../constants/deviceFacts';
 import type { DeviceDetails, DeviceFact, DeviceFactGroup } from '../types/device-details';
+import type { AppPartitionMetadata } from '../types/app-partitions';
 import type { NvsParseResult } from '../lib/nvs/nvsParser';
 
 type DeviceDetailsWrapper = { value: DeviceDetails | null };
@@ -226,12 +238,14 @@ type LaMachineFirmwareVariant = 'retail' | '4mb' | 'proto';
 const props = withDefaults(
   defineProps<{
     chipDetails?: DeviceDetails | DeviceDetailsWrapper | null;
+    apps?: AppPartitionMetadata[] | null;
     nvsResult?: NvsParseResult | null;
     busy?: boolean;
     kioskMode?: boolean;
   }>(),
   {
     chipDetails: null,
+    apps: null,
     nvsResult: null,
     busy: false,
     kioskMode: false,
@@ -371,7 +385,46 @@ const decodedConfiguration = computed(() => {
   return undefined;
 });
 
-const hasLaMachineConfiguration = computed(() => Boolean(configurationEntry.value));
+type FirmwareMetadata = {
+  projectName: string | null;
+  version: string | null;
+  built: string | null;
+  idfVersion: string | null;
+  entryAddressHex: string | null;
+  segmentCount: number | null;
+};
+
+const firmwareMetadata = computed<FirmwareMetadata | null>(() => {
+  const apps = props.apps ?? [];
+  if (!apps.length) return null;
+
+  const sorted = [...apps].sort((a, b) => {
+    const activeDelta = Number(b.isActive) - Number(a.isActive);
+    if (activeDelta) return activeDelta;
+    const validDelta = Number(b.valid) - Number(a.valid);
+    if (validDelta) return validDelta;
+    const descriptorDelta = Number(b.descriptorFound) - Number(a.descriptorFound);
+    if (descriptorDelta) return descriptorDelta;
+    return a.offset - b.offset;
+  });
+
+  const selected = sorted[0];
+  const builtFromParts = [selected.buildDate, selected.buildTime].filter(
+    (part): part is string => Boolean(part),
+  );
+
+  const result: FirmwareMetadata = {
+    projectName: selected.projectName,
+    version: selected.version,
+    built: selected.built || (builtFromParts.length ? builtFromParts.join(' ') : null),
+    idfVersion: selected.idfVersion,
+    entryAddressHex: selected.entryAddressHex,
+    segmentCount: selected.segmentCount,
+  };
+
+  const hasAny = Object.values(result).some(value => value != null && `${value}`.trim().length > 0);
+  return hasAny ? result : null;
+});
 
 const translateFactLabel = (fact: DeviceFact): string => {
   const key = fact.translationKey ?? getFactLabelKey(fact.label);
@@ -663,6 +716,40 @@ const translateGroupTitle = (group: DeviceFactGroup): string =>
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px 16px;
+}
+
+.device-nvs-metadata {
+  display: grid;
+  gap: 10px 16px;
+}
+
+@media (min-width: 960px) {
+  .device-nvs-metadata {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.device-nvs-metadata__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--v-theme-surface) 94%, transparent);
+}
+
+.device-nvs-metadata__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 62%, transparent);
+}
+
+.device-nvs-metadata__value {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--v-theme-on-surface) 92%, transparent);
+  word-break: break-word;
 }
 
 .device-nvs-field {

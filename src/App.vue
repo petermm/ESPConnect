@@ -124,7 +124,7 @@
           </v-alert>
           <v-window v-model="activeTab" class="app-tab-content">
             <v-window-item value="info">
-              <DeviceInfoTab :chip-details="chipDetails" :nvs-result="nvsState.result" :busy="busy || maintenanceBusy"
+              <DeviceInfoTab :chip-details="chipDetails" :apps="appPartitions" :nvs-result="nvsState.result" :busy="busy || maintenanceBusy"
                 :kiosk-mode="kioskMode"
                 @disconnect-reset="disconnectFromUi" @connect="lookForLaMachine" @factory-reset="factoryResetLaMachine"
                 @flash-la-machine="flashLaMachineFirmware" />
@@ -6400,8 +6400,9 @@ async function connect(port?: SerialPort) {
       const loaderInstance = loader.value;
       const partitions = await runLoaderOperation(() => readPartitionTable(loaderInstance, undefined, undefined, appendLog));
       partitionTable.value = partitions;
-      handleReadNvs();
+      void handleReadNvs();
       appMetadataLoaded.value = false;
+      void loadAppMetadata({ force: true });
     } else {
       partitionTable.value = [];
       appMetadataLoaded.value = false;
@@ -6751,6 +6752,8 @@ async function flashLaMachineFirmware(variant: LaMachineFirmwareVariant) {
     flashProgressDialog.label = '';
     flashProgressDialog.indeterminate = false;
     await refreshPartitionTable(loaderInstance);
+    void loadAppMetadata({ force: true });
+    void handleReadNvs();
     busy.value = false;
   }
 }
